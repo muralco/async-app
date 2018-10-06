@@ -4,7 +4,7 @@ Express Wrapper.
 ## Description
 
 Express wrapper for handling async middlewares, order middlewares, schema validator, and other stuff.
-Or just create your own fn that recieves all the middlewares, do some magic with them and pass it as a converter. ( See Converter Docs )
+Or just create your own fn that recieves all the middlewares, do some magic with them and pass it as a converter. (See Converter Docs)
 
 ## Installation
 

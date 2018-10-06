@@ -6,7 +6,7 @@ script:
 
 deploy:
   provider: script
-  script: bash scripts/publish.sh
+  script: npm run test
   skip_cleanup: true
   email: it@mural.co
   on:

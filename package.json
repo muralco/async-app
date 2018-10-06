@@ -1,0 +1,39 @@
+{
+  "name": "async-app",
+  "version": "1.0.0",
+  "description": "Express wrapper for handling async middlewares, order middlewares, schema validator, and other stuff",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tactivos/async-app.git"
+  },
+  "author": "MURAL",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tactivos/async-app/issues"
+  },
+  "homepage": "https://github.com/tactivos/async-app",
+  "devDependencies": {
+    "@types/cucumber": "4.0.4",
+    "@types/express": "^4.16.0",
+    "@types/lodash": "^4.14.116",
+    "@types/node": "10.5.2",
+    "ts-node": "7.0.1",
+    "tslint": "5.11.0",
+    "tslint-config-airbnb": "5.9.2",
+    "typescript": "3.0.3"
+  },
+  "scripts": {
+    "build": "npm run lint && tsc",
+    "dist": "rm -rf dist && npm run build && npm run test && cp package*.json README.md LICENSE dist",
+    "lint": "tslint -p .",
+    "pack": "npm run dist && cd dist && npm pack",
+    "test": "echo",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "express": "^4.16.3",
+    "lodash": "^4.17.11"
+  }
+}

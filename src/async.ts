@@ -1,14 +1,16 @@
+import { CustomError } from './error';
 import {
-  AsyncMiddleware,
   CommonMiddleware,
   CompileSchema,
   Converter,
+  Decorator,
   Entities,
   isAsyncMiddleware,
   isMiddleware,
   isNumber,
   isPromise,
   isSchema,
+  Middleware,
   ValidateSchema,
 } from './types';
 
@@ -19,68 +21,86 @@ type Options = {
   validateSchema?: ValidateSchema;
 };
 
-const mapMiddleware = <
-  TEntities extends Entities,
->(
-  asyncMiddleware: AsyncMiddleware<TEntities>,
+const copyDecorators = <TSrc extends Decorator, TDest extends Decorator>(
+  src: TSrc,
+  dest: TDest,
+) => {
+  const keys = Object
+    .keys(src)
+    .filter(k => k.startsWith('$')) as (keyof Decorator)[];
+
+  keys.forEach(k => dest[k] = src[k]);
+};
+
+const mapMiddleware = <TEntities extends Entities>(
+  middleware: Middleware<TEntities>,
   options?: Options,
 ): CommonMiddleware<TEntities> => {
-  const fn: CommonMiddleware<TEntities> = (req, res, next) => {
-    // First we run the middleware as usual
-    const promiseOrVoid = asyncMiddleware(req);
+  const fn: CommonMiddleware<TEntities> = async (req, res, next) => {
+    try {
+      // First we run the middleware as usual
+      const promiseOrVoid = isAsyncMiddleware(middleware)
+        ? middleware(req)
+        : middleware(req, res, next);
 
-    if (typeof options === 'undefined' || req.method === 'USE') {
-      // `USE` middlewares never return stuff, so there is no need for us to
-      // attempt to process the result. `options` is only passed to the last
-      //  middleware, if this is not the last middleware, continue with next one
-      return next();
-    }
+      const promise = isPromise(promiseOrVoid)
+        ? promiseOrVoid
+        : Promise.resolve(promiseOrVoid);
 
-    const promise = isPromise(promiseOrVoid)
-      ? promiseOrVoid
-      : Promise.resolve(promiseOrVoid);
+      const val = await promise;
 
-    return promise
-      .then((val) => {
-        // The middleware already responded so there's nothing for us to do
-        if (res.headersSent) return;
+      if (!isAsyncMiddleware(middleware)) {
+        // This middleware has `res` so we it will take care of the response
+        return;
+      }
 
-        if (options.validateSchema) {
-          // Lets validate that schema
-          const schemaErrors = options.validateSchema(val);
+      if (typeof options === 'undefined' || req.method === 'USE') {
+        // `USE` middlewares never return stuff, so there is no need for us to
+        // attempt to process the result. `options` is only passed to the last
+        //  middleware, if this is not the last middleware, continue with next
+        // one
+        return next();
+      }
 
-          if (schemaErrors.length) {
-            const response = {
-              error: 'INVALID_SCHEMA_RESPONSE',
-              path: schemaErrors[0].key,
-              source: 'response',
-            };
+      // The middleware already responded so there's nothing for us to do
+      if (res.headersSent) return;
 
-            res.status(400).send(response);
-            return;
-          }
+      if (options.validateSchema) {
+        // Lets validate that schema
+        const schemaErrors = options.validateSchema(val);
+
+        if (schemaErrors.length) {
+          const response = {
+            error: 'INVALID_SCHEMA_RESPONSE',
+            path: schemaErrors[0].key,
+            source: 'response',
+          };
+
+          res.status(400).send(response);
+          return;
         }
+      }
 
-        res.status(options.statusCode).json(val || {});
-      })
-      .catch(next);
+      res.status(options.statusCode).json(val || {});
+    } catch (err) {
+      if (!err || !(err instanceof CustomError)) { return next(err); }
+
+      const { statusCode, error, extra } = err;
+
+      return res.status(statusCode || 500).send({ error, ...extra });
+    }
   };
 
-  // Keep the $ vars.
-  fn.$noOrder = asyncMiddleware.$noOrder;
-  fn.$permission = asyncMiddleware.$permission;
-  fn.$provides = asyncMiddleware.$provides;
-  fn.$requires = asyncMiddleware.$requires;
+  copyDecorators(middleware, fn);
 
   return fn;
 };
 
-// If any argument is a 1 arg function (i.e. a middleware without
-// `res & next`), then we map it because it could be an async middleware
 export default <TEntities extends Entities, TSchema>(
   compileSchema?: CompileSchema<TSchema>,
 ): Converter<TEntities, TSchema> => (args, context) => {
-  const statusCode = args.find(isNumber) || DEFAULT_STATUS_CODE ;
+  const statusCode = args.find(isNumber) || DEFAULT_STATUS_CODE;
+
   const schema = args
     .filter(isSchema<TSchema>())
     .find(s => s.$scope === 'response');
@@ -91,18 +111,14 @@ export default <TEntities extends Entities, TSchema>(
   const middlewares = args.filter(isMiddleware);
   const lastMiddleware = middlewares[middlewares.length - 1];
 
-  return args
-    .map((m) => {
-      // Check if this is the last valid middleware (not the statusCode arg)
-      const withResp = m === lastMiddleware;
-
-      if (isAsyncMiddleware(m)) {
-        return mapMiddleware(
+  return args.map(m => isMiddleware(m)
+      ? mapMiddleware(
           m,
-          withResp ? { statusCode, validateSchema } : undefined,
-        );
-      }
-
-      return m;
-    });
+          // Check if this is the last valid middleware (not the statusCode arg)
+          m === lastMiddleware
+            ? { statusCode, validateSchema }
+            : undefined,
+        )
+      : m,
+  );
 };

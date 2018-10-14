@@ -1,8 +1,6 @@
 Async App
 =========
 
-## Description
-
 `async-app` is an express wrapper for handling async middlewares, schema 
 validation, and other stuff.
 

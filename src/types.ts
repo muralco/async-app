@@ -19,6 +19,7 @@ export type Decorator = {
   $requires?: string[];
   $permission?: string;
   $noOrder?: boolean;
+  $deprecated?: 'in-use' | 'redirect' | 'rewrite';
 };
 
 export type CommonMiddleware<TEntities extends Entities> = (

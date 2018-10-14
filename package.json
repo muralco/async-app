@@ -44,7 +44,7 @@
     "dist": "rm -rf dist && npm run build && npm run test && cp package*.json README.md LICENSE dist && rm -rf ./dist/test.* ./dist/examples",
     "lint": "tslint -p .",
     "pack": "npm run dist && cd dist && npm pack",
-    "test": "NO_EXAMPLES=1 cucumber-js --require-module ts-node/register -r src/test.ts",
+    "test": "NO_EXAMPLES=1 cucumber-js --require-module ts-node/register --exit -r src/test.ts",
     "watch": "tsc -w"
   }
 }

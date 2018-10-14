@@ -7,8 +7,6 @@ export const runExample = (
   app: App<any, any>,
   fn?: (prefix: string) => void,
 ) => {
-  if (process.env.NO_EXAMPLES === '1') return;
-
   const httpServer = new Server(app);
 
   httpServer.listen(port, (err: any) => {

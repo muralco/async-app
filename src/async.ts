@@ -111,7 +111,8 @@ export default <TEntities extends Entities, TSchema>(
   const middlewares = args.filter(isMiddleware);
   const lastMiddleware = middlewares[middlewares.length - 1];
 
-  return args.map(m => isMiddleware(m)
+  // 4 argument middlewares are error handlers, and we leave them untouched
+  return args.map(m => isMiddleware(m) && m.length < 4
       ? mapMiddleware(
           m,
           // Check if this is the last valid middleware (not the statusCode arg)

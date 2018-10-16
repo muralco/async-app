@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { decorate } from './decorate';
+import { Entities, Middleware } from './types';
 
 type Method =
   | 'CONNECT'
@@ -15,7 +16,7 @@ type Method =
 type PathGetter = string|((r: Request) => string);
 type BodyGetter = (r: Request) => any;
 
-export const endpoint = decorate(
+export const endpoint: Middleware<Entities> = decorate(
   { $deprecated: 'in-use' },
   (_: Request, res: Response, next: NextFunction) => {
     res.set('Deprecated', 'true');
@@ -26,7 +27,7 @@ export const endpoint = decorate(
 export const redirect = (
   path: PathGetter,
   status = 302,
-) => decorate(
+): Middleware<Entities> => decorate(
   { $deprecated: 'redirect' },
   (req: Request, res: Response, _: NextFunction) => {
     const actualPath = typeof path === 'function' ? path(req) : path;
@@ -39,7 +40,7 @@ export const rewrite = (
   method: Method,
   path: PathGetter,
   getBody?: BodyGetter,
-) => {
+): Middleware<Entities> => {
   const pathGetter = typeof path === 'function'
     ? path
     : () => path;

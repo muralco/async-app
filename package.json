@@ -27,7 +27,7 @@
     "@types/node": "10.5.2",
     "@types/supertest": "^2.0.6",
     "body-parser": "^1.18.3",
-    "mural-schema": "^1.0.0",
+    "mural-schema": "^1.0.1",
     "pickled-cucumber": "^1.0.6",
     "supertest": "^3.3.0",
     "ts-node": "^7.0.1",

@@ -9,8 +9,7 @@
 // | help us in specifing middlewares later.                                | //
 // +========================================================================+ //
 
-import { parseSchema } from 'mural-schema';
-import { Type } from 'mural-schema/types';
+import { parseSchema, Type } from 'mural-schema';
 import { ToDo, User } from './db';
 
 // In your case this is `from 'async-app'`

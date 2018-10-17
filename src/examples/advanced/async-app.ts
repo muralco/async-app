@@ -20,7 +20,6 @@ import createApp, { Entities, Req as Request } from '../..';
 export interface ExampleEntities extends Entities {
   user: User;
   todo: ToDo;
-  todos: ToDo[];
 }
 
 // This type helps us write middlewares that explicitly declare which custom

@@ -1,7 +1,7 @@
 import { Server } from 'http';
 import { App } from '../types';
 
-const port = 6543;
+export const port = 6543;
 
 export const runExample = (
   app: App<any, any>,

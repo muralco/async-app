@@ -5,10 +5,15 @@
 // | validation, middleware ordering, TypeScript, etc.                      | //
 // +========================================================================+ //
 
+import { execSync } from 'child_process';
 import { runExample } from '../common';
 import app from './app';
 
+// Generate documentation
+execSync('node generate-docs.js');
+
 runExample(app, prefix => console.log(`Try:
+
   # Happy path
   curl -X POST ${prefix}/users -H 'Content-Type: application/json' \\
     -d '{"username": "j1", "name": "John" }' -sv 2>&1 | grep '< HTTP'
@@ -21,5 +26,8 @@ runExample(app, prefix => console.log(`Try:
   # Edges
   curl ${prefix}/users/invalid
   curl ${prefix}/todos/invalid
+
+  # Browse generated documentation:
+  ${prefix}/docs
 
   `));

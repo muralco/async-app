@@ -1,4 +1,4 @@
-import { flattenDeep, sortBy } from 'lodash';
+import { flattenDeep, omit, sortBy } from 'lodash';
 import {
   App,
   ArgumentOption,
@@ -143,3 +143,6 @@ export default <TEntities extends Entities, TSchema>(
   const app = returnYourAppFromThisFn() as any as MetadataApp<TSchema>;
   return app.getRoutes();
 };
+
+export const removeScope = <TSchema>(schema: TSchema): TSchema =>
+  omit(schema as unknown as object, '$scope') as unknown as TSchema;

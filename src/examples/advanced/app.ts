@@ -4,12 +4,13 @@
 // +========================================================================+ //
 
 import bodyParser from 'body-parser';
+import express from 'express';
+import { join } from 'path';
 
-// In your case this is `from 'async-app'`
 import { deprecate } from '../..';
 import createApp, { Req } from './async-app';
 import can from './can';
-import { addTodo, addUser } from './db';
+import { addTodo, addUser, getTodosForUser } from './db';
 import load from './load';
 
 const app = createApp();
@@ -65,8 +66,7 @@ app.post(
     item: 'string',
   },
   load.user.fromParams(),
-  load.todos.formUser(),
-  async (req: Req<'user'|'todos'>) => {
+  async (req: Req<'user'>) => {
     const id = Math.random();
     await addTodo({
       ...req.body,
@@ -82,8 +82,7 @@ app.get(
   '/todos/:username',
   'Returns the TODOs for the specified user',
   load.user.fromParams(),
-  load.todos.formUser(),
-  (req: Req<'todos'>) => req.todos,
+  (req: Req<'user'>) => getTodosForUser(req.user.username),
 );
 
 app.get(
@@ -93,6 +92,12 @@ app.get(
   load.todo.fromParams(),
   can.view.todo(),
   (req: Req<'todo'>) => req.todo,
+);
+
+// --- Docs ----------------------------------------------------------- //
+app.use(
+  '/docs',
+  express.static(join(__dirname, '../../../src/examples/advanced/docs')),
 );
 
 export default app;

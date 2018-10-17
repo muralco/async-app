@@ -16,6 +16,7 @@ interface Options<TSchema> {
   generateSchema?: (schema: TSchema) => any;
   getCategory?: (route: Route<TSchema>) => string | undefined;
   getParamAlias?: (param: string) => string | undefined;
+  sortCategories?: (a: string, b: string) => number;
 }
 
 type GetAlias = Options<any>['getParamAlias'];
@@ -90,6 +91,14 @@ const showRoute = <TSchema>(
   || (r.deprecated === 'in-use' && allowDeprecated !== 'none')
   || (allowDeprecated === 'all');
 
+const defaultSortCategories = (a: string, b: string): number => {
+  if (a === 'deprecated') return 1;
+  if (b === 'deprecated') return -1;
+  if (a === 'misc') return 1;
+  if (b === 'misc') return -1;
+  return a < b ? -1 : 1;
+};
+
 export default <TSchema>(
   routes: Route<TSchema>[],
   opts: Options<TSchema> = {},
@@ -108,9 +117,6 @@ export default <TSchema>(
     ...flattenDeep(misc).map(r => ({ ...r, category: 'misc' })),
   ].filter(showRoute(opts.deprecated));
 
-  const cats = uniq(finalRoutes.map(r => r.category))
-    .sort()
-    .filter(c => c !== 'misc' && c !== 'deprecated');
   const paths = finalRoutes.reduce(
     (acc, route) => {
       const spath = expandTemplates(opts.getParamAlias, route.path.toString());
@@ -120,12 +126,12 @@ export default <TSchema>(
     },
     {} as { [path: string]: { [method: string]: any }},
   );
+
+  const cats = uniq(finalRoutes.map(r => r.category))
+    .sort(opts.sortCategories || defaultSortCategories);
+
   return {
     paths,
-    tags: [
-      ...cats.map(c => ({ name: c })),
-      { name: 'misc' },
-      { name: 'deprecated' },
-    ],
+    tags: cats.map(c => ({ name: c })),
   };
 };

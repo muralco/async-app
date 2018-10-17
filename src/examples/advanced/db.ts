@@ -10,8 +10,9 @@ export interface User {
 
 export interface ToDo {
   id: number;
-  owner: string;
   item: string;
+  owner: string;
+  readOnly: boolean;
 }
 
 interface Db {

@@ -48,6 +48,7 @@ const todo: Entity<ToDo, 'id'> = {
       id: Math.random(),
       item: `${Math.random()} task`,
       owner: `${Math.random()}`,
+      readOnly: false,
       ...(attrs || {}),
     };
     DB.todos[item.id] = item;

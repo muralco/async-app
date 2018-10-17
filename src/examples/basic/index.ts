@@ -1,5 +1,5 @@
-import { createApp } from '../create-app';
-import { runExample } from './common';
+import { createApp } from '../../create-app';
+import { runExample } from '../common';
 
 // Put this in some file somewhere
 const thisReplacesExpress = () => createApp();

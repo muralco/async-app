@@ -19,7 +19,7 @@ export const loadWith = <
   TKey extends keyof TEntities,
   TId extends keyof TEntities[TKey],
 >(
-  fetch: (id: TEntities[TKey][TId]) => Promise<Req<TEntities>[TKey]>,
+  fetch: (id: TEntities[TKey][TId]) => Promise<Req<TEntities>[TKey] | null>,
   getIdFromModel: (model: Req<TEntities>[TKey]) => TEntities[TKey][TId],
 ) => (
   getIdFrom: GetIdFrom<TEntities, TEntities[TKey][TId]>,

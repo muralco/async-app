@@ -48,7 +48,7 @@ app.post(
     await addUser(user);
     return { username: user.username };
   },
-  201, // A number specified the success status code
+  201, // A number specifies the success status code
 );
 
 app.get(

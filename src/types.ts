@@ -77,6 +77,7 @@ export type Schema<TSchema = { [k: string]: any }> = {
 } & TSchema;
 
 export type ValidationError = {
+  expected?: string;
   key: (string|number)[];
 };
 export type ValidateSchema = (obj: any) => ValidationError[];
@@ -84,6 +85,11 @@ export type CompileSchema<T> = (
   schema: Schema<T>,
   context: Context,
 ) => ValidateSchema;
+
+export type GenerateSchemaErrorFn = (
+  errors: ValidationError[],
+  source: string,
+) => any;
 
 // === Arguments ============================================================ //
 export type MiddlewareArg<TEntities extends Entities> =
@@ -136,6 +142,7 @@ export interface Opts<
 > {
   converters?: Converter<TEntities, TSchema>[];
   compileSchemaFn?: CompileSchema<TSchema>;
+  generateSchemaErrorFn?: GenerateSchemaErrorFn;
   validateResponseSchema?: boolean;
 }
 

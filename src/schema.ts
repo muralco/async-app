@@ -3,6 +3,7 @@ import {
   CompileSchema,
   Context,
   Entities,
+  GenerateSchemaErrorFn,
   isSchema,
   Middleware,
   RequestScope,
@@ -18,8 +19,16 @@ const METHOD_SOURCE_MAP: { [key: string]: Scope } = {
   put: 'body',
 };
 
+const defaultGenerateError: GenerateSchemaErrorFn = ([error], source) => ({
+  error: 'INVALID_PAYLOAD',
+  expected: error.expected,
+  path: error.key,
+  source,
+});
+
 const createMiddleware = <TEntities extends Entities>(
   validate: ValidateSchema,
+  generateError: GenerateSchemaErrorFn,
   source: RequestScope,
 ): Middleware<TEntities> =>
     (req, res, next) => {
@@ -29,13 +38,7 @@ const createMiddleware = <TEntities extends Entities>(
       const schemaErrors = validate(data);
 
       if (schemaErrors.length) {
-        const response = {
-          error: 'INVALID_PAYLOAD',
-          path: schemaErrors[0].key,
-          source: realSource,
-        };
-
-        res.status(400).send(response);
+        res.status(400).send(generateError(schemaErrors, realSource));
         return;
       }
 
@@ -44,6 +47,7 @@ const createMiddleware = <TEntities extends Entities>(
 
 export default <TEntities extends Entities, TSchema>(
   compileSchema: CompileSchema<TSchema>,
+  generateError = defaultGenerateError,
 ) => (
   middlewares: ArgumentOption<TEntities, TSchema>[],
   context: Context,
@@ -60,6 +64,7 @@ export default <TEntities extends Entities, TSchema>(
 
   const schemaMiddleware = createMiddleware<TEntities>(
     compileSchema(schema, context),
+    generateError,
     source,
   );
 

@@ -74,7 +74,10 @@ export const createApp = <TEntities extends Entities = Entities, TSchema = {}>(
   const converters = opts && opts.converters || [];
 
   if (opts && opts.compileSchemaFn) {
-    converters.push(schemaConverter(opts.compileSchemaFn));
+    converters.push(schemaConverter(
+      opts.compileSchemaFn,
+      opts.generateSchemaErrorFn,
+    ));
   }
 
   const async = opts && opts.compileSchemaFn && opts.validateResponseSchema

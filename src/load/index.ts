@@ -63,7 +63,7 @@ export const loadFromRequest = <
   return decorate({ $provides, $requires }, loadModel);
 };
 
-export const fetchOnce = <
+export const loadOnlyOnce = <
   TEntities extends Entities,
   TKey extends keyof TEntities,
   TId extends keyof TEntities[TKey],
@@ -105,7 +105,7 @@ export const loadWith = <
   loadAdditionalModels?: LoadAdditionalModels<TEntities, Req<TEntities>[TKey]>,
 ) =>
   loadFromRequest(
-    fetchOnce(fetch, getIdFromModel, getIdFrom, storeModelInto),
+    loadOnlyOnce(fetch, getIdFromModel, getIdFrom, storeModelInto),
     storeModelInto,
     loadAdditionalModels,
   );

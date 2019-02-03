@@ -94,6 +94,15 @@ app.get(
   (req: Req<'todo'>) => req.todo,
 );
 
+app.get(
+  '/todos-by-id/:todoId',
+  'Returns a TODO of the specified user',
+  load.todo.fromParams(),
+  load.user.fromTodo(),
+  can.view.todo(),
+  (req: Req<'todo'>) => req.todo,
+);
+
 // --- Docs ----------------------------------------------------------- //
 app.use(
   '/docs',

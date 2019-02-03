@@ -40,6 +40,17 @@ Scenario: get TODOs
     }
     """
 
+Scenario: get TODOs by id
+  Given a user U with { "username": "${random}", "name": "Ringo ${random}" }
+  And a todo T with { "owner": "${U.username}", "item": "Autograph a photo for Marge" }
+  When GET /todos-by-id/${T.id}
+  Then the response is 200 and the payload includes
+    """
+    {
+      "item": "Autograph a photo for Marge"
+    }
+    """
+
 # Edges
 
 Scenario: create a user without username

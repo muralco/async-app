@@ -3,7 +3,7 @@
 // +========================================================================+ //
 
 // In your case this is `from 'async-app'`
-import { loadWith } from '../..';
+import { loadOnceWith, loadWith } from '../..';
 import { ExampleEntities } from './async-app';
 import { getTodo, getUser } from './db';
 
@@ -16,6 +16,10 @@ const loadUser = loadWith<ExampleEntities, 'user', 'username'>(
   user => user.username,
 );
 
+const loadUserWith = loadOnceWith<ExampleEntities, 'user', 'username'>(
+  user => user.username,
+);
+
 const load = {
   todo: {
     fromParams: (paramName = 'todoId') =>
@@ -24,6 +28,12 @@ const load = {
   user: {
     fromParams: (paramName = 'username') =>
       loadUser(req => req.params[paramName], 'user'),
+    fromTodo: () => loadUserWith(
+      req => getUser(req.todo.owner),
+      req => req.todo.owner,
+      'user',
+      ['todo'],
+    ),
   },
 };
 

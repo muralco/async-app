@@ -1,4 +1,4 @@
-import { decorate } from '../decorate';
+import { decorate, requires } from '../decorate';
 import { internalServerError, notFound } from '../error';
 import { Entities, Req as Request } from '../types';
 
@@ -19,7 +19,7 @@ interface GetModelFrom<
   TEntities extends Entities,
   TKey extends keyof TEntities,
 > extends Requires {
-  (req: Req<TEntities>): Promise<Req<TEntities>[TKey]>;
+  (req: Req<TEntities>): Promise<Req<TEntities>[TKey] | null>;
 }
 
 interface GetModelById<
@@ -68,13 +68,14 @@ export const loadOnlyOnce = <
   TKey extends keyof TEntities,
   TId extends keyof TEntities[TKey],
 >(
-  fetch: GetModelById<TEntities, TKey, TId>,
   getIdFromModel: (model: Req<TEntities>[TKey]) => TEntities[TKey][TId],
-  getIdFrom: GetIdFrom<TEntities, TEntities[TKey][TId]>,
+) => (
+  getModelFromRequest: GetModelFrom<TEntities, TKey>,
+  getIdFromRequest: GetIdFrom<TEntities, TEntities[TKey][TId]>,
   storeModelInto: TKey,
 ) => {
   const load: GetModelFrom<TEntities, TKey> = async (req) => {
-    const id = getIdFrom(req);
+    const id = getIdFromRequest(req);
     const oldModel = req[storeModelInto];
 
     // Invalid model stored in [storeModelInto] key
@@ -86,9 +87,9 @@ export const loadOnlyOnce = <
       });
     }
 
-    return oldModel || await fetch(id);
+    return oldModel || await getModelFromRequest(req);
   };
-  load.$requires = getIdFrom.$requires;
+  load.$requires = getIdFromRequest.$requires;
   return load;
 };
 
@@ -99,13 +100,49 @@ export const loadWith = <
 >(
   fetch: GetModelById<TEntities, TKey, TId>,
   getIdFromModel: (model: Req<TEntities>[TKey]) => TEntities[TKey][TId],
-) => (
-  getIdFrom: GetIdFrom<TEntities, TEntities[TKey][TId]>,
-  storeModelInto: TKey,
-  loadAdditionalModels?: LoadAdditionalModels<TEntities, Req<TEntities>[TKey]>,
-) =>
-  loadFromRequest(
-    loadOnlyOnce(fetch, getIdFromModel, getIdFrom, storeModelInto),
-    storeModelInto,
-    loadAdditionalModels,
+) => {
+  const load = loadOnlyOnce(getIdFromModel);
+
+  return (
+    getIdFromRequest: GetIdFrom<TEntities, TEntities[TKey][TId]>,
+    storeModelInto: TKey,
+    loadAdditionalModels?:
+      LoadAdditionalModels<TEntities, Req<TEntities>[TKey]>,
+  ) =>
+    loadFromRequest(
+      load(
+        req => fetch(getIdFromRequest(req)),
+        getIdFromRequest,
+        storeModelInto,
+      ),
+      storeModelInto,
+      loadAdditionalModels,
+    );
+};
+
+export const loadOnceWith = <
+  TEntities extends Entities,
+  TKey extends keyof TEntities,
+  TId extends keyof TEntities[TKey],
+>(
+  getIdFromModel: (model: Req<TEntities>[TKey]) => TEntities[TKey][TId],
+) => {
+  const load = loadOnlyOnce(getIdFromModel);
+
+  return (
+    getModelFromRequest: GetModelFrom<TEntities, TKey>,
+    getModelIdFromRequest: (model: Req<TEntities>) => TEntities[TKey][TId],
+    storeModelInto: TKey,
+    requiredModels?: string[],
+    loadAdditionalModels?:
+      LoadAdditionalModels<TEntities, Req<TEntities>[TKey]>,
+  ) =>
+  requires(
+    requiredModels || getModelFromRequest.$requires || [],
+    loadFromRequest(
+      load(getModelFromRequest, getModelIdFromRequest, storeModelInto),
+      storeModelInto,
+      loadAdditionalModels,
+    ),
   );
+};

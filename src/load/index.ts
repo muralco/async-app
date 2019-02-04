@@ -19,7 +19,7 @@ interface GetModelFrom<
   TEntities extends Entities,
   TKey extends keyof TEntities,
 > extends Requires {
-  (req: Req<TEntities>): Promise<Req<TEntities>[TKey] | null>;
+  (req: Req<TEntities>): Promise<Req<TEntities>[TKey] | null | undefined>;
 }
 
 interface GetModelById<
@@ -27,7 +27,7 @@ interface GetModelById<
   TKey extends keyof TEntities,
   TId extends keyof TEntities[TKey],
 > {
-  (id: TEntities[TKey][TId]): Promise<Req<TEntities>[TKey] | null>;
+  (id: TEntities[TKey][TId]): Promise<Req<TEntities>[TKey] | null | undefined>;
 }
 
 export const loadFromRequest = <

@@ -137,12 +137,17 @@ Module.prototype.require = function require(path: string) {
   return originalRequire.apply(this, arguments); // tslint:disable-line
 };
 
-export default <TEntities extends Entities, TSchema>(
+const analyzeApp = <TEntities extends Entities, TSchema>(
   returnYourAppFromThisFn: () => App<TEntities, TSchema>,
 ): Route<TSchema>[] => {
   const app = returnYourAppFromThisFn() as any as MetadataApp<TSchema>;
   return app.getRoutes();
 };
 
+export const analyzeFile = (absolutePathToApp: string) =>
+  analyzeApp(() => require(absolutePathToApp));
+
 export const removeScope = <TSchema>(schema: TSchema): TSchema =>
   omit(schema as unknown as object, '$scope') as unknown as TSchema;
+
+export default analyzeApp;

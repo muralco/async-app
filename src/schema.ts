@@ -63,7 +63,7 @@ export default <TEntities extends Entities, TSchema>(
   if (source === 'response') return middlewares;
 
   const schemaMiddleware = createMiddleware<TEntities>(
-    compileSchema(schema, context),
+    compileSchema(schema.$schema || schema, context),
     generateError,
     source,
   );

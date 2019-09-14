@@ -73,6 +73,7 @@ export type RequestScope = 'body' | 'query';
 export type Scope = RequestScope | 'response';
 
 export type Schema<TSchema = { [k: string]: any }> = {
+  $schema?: TSchema;
   $scope?: Scope;
 } & TSchema;
 

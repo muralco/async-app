@@ -41,3 +41,12 @@ export const getTodo = async (id: number) =>
 
 export const getTodosForUser = async (username: string) =>
   Object.values(DB.todos).filter(t => t.owner === username);
+
+export const removeUser = async (username: string) => {
+  const exists = username in DB.users;
+  const userToDelete = exists ? new Object(DB.users[username]) : {};
+  if (exists) {
+    delete DB.users[username];
+  }
+  return userToDelete;
+};

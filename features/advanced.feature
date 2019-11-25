@@ -51,6 +51,22 @@ Scenario: get TODOs by id
     }
     """
 
+Scenario: delete USER by id
+  Given a user U with { "username": "${random}", "name": "Ringo ${random}" }
+  When DELETE /users/purge/${U.username}
+  Then the response is 200 and the payload includes
+    """
+    {
+      "username": "${U.username}"
+    }
+    """
+  And the user U was deleted
+
+Scenario: do not delete a not existing user and respond with a custom error
+  When DELETE /users/purge/${U.username}
+  Then the response is 400
+  And the response payload at error is "invalid_user"
+
 # Edges
 
 Scenario: create a user without username

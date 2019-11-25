@@ -75,7 +75,7 @@ Scenario: create a user without name
 
 Scenario: get invalid user
   When GET /users/invalid
-  Then the response is 404 and the payload at error is "USER"
+  Then the response is 400 and the payload at error is "invalid_user"
 
 Scenario: create TODO without item
   Given a user U with { "username": "${random}", "name": "Invalid ${random}" }

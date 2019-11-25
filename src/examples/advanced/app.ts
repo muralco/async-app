@@ -10,8 +10,9 @@ import { join } from 'path';
 import { deprecate } from '../..';
 import createApp, { Req } from './async-app';
 import can from './can';
-import { addTodo, addUser, getTodosForUser } from './db';
+import { addTodo, getTodosForUser } from './db';
 import load from './load';
+import users from './users';
 
 const app = createApp();
 app.use(bodyParser.json());
@@ -36,27 +37,7 @@ app.get(
 );
 
 // --- Users ---------------------------------------------------------------- //
-app.post(
-  '/users',
-  'Creates a user', // This is the summary string for the endpoint
-  { // This is the expected schema of the body
-    name: 'string',
-    username: 'string',
-  },
-  async (req: Req) => {
-    const user = req.body;
-    await addUser(user);
-    return { username: user.username };
-  },
-  201, // A number specifies the success status code
-);
-
-app.get(
-  '/users/:username',
-  'Returns the specified user',
-  load.user.fromParams(),
-  (req: Req<'user'>) => req.user,
-);
+app.use('/users', users);
 
 // --- TODOs ---------------------------------------------------------------- //
 app.post(

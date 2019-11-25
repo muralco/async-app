@@ -14,6 +14,7 @@ import { ToDo, User } from './db';
 
 // In your case this is `from 'async-app'`
 import createApp, { Entities, Req as Request } from '../..';
+import { ErrorHandlerFn } from '../../types';
 
 // This type represents all the custom `req` keys that we could have, in this
 // example those are `res.user` and `req.todo`.
@@ -24,15 +25,21 @@ export interface ExampleEntities extends Entities {
 
 // This type helps us write middlewares that explicitly declare which custom
 // keys from `req` they are going to use (e.g. `(req: Req<'user'>) => req.user`)
-export type Req<T extends keyof ExampleEntities = '_'> =
-  Request<ExampleEntities, T>;
+export type Req<T extends keyof ExampleEntities = '_'> = Request<
+  ExampleEntities,
+  T
+>;
+
+export { ErrorHandlerFn } from '../..';
 
 // This function replaces `express()` as in `const app = express()`;
-export default () => createApp<ExampleEntities, Type>({
-  // In here you specify additional `async-app` options...
+export default (errorHandlerFn?: ErrorHandlerFn<ExampleEntities>) =>
+  createApp<ExampleEntities, Type>({
+    // In here you specify additional `async-app` options...
 
-  // The following line enables schema validation using `mural-schema`. Note
-  // that you can easily change your schema validation module by specifing add
-  // different `compileSchemaFn`.
-  compileSchemaFn: schema => parseSchema(schema),
-});
+    // The following line enables schema validation using `mural-schema`. Note
+    // that you can easily change your schema validation module by specifing add
+    // different `compileSchemaFn`.
+    compileSchemaFn: schema => parseSchema(schema),
+    errorHandlerFn,
+  });

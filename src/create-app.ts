@@ -80,9 +80,13 @@ export const createApp = <TEntities extends Entities = Entities, TSchema = {}>(
     ));
   }
 
-  const async = opts && opts.compileSchemaFn && opts.validateResponseSchema
-    ? asyncConverter<TEntities, TSchema>(opts.compileSchemaFn)
-    : asyncConverter<TEntities, TSchema>();
+  const async = asyncConverter<TEntities, TSchema>({
+    compileSchema:
+      opts && opts.compileSchemaFn && opts.validateResponseSchema
+        ? opts.compileSchemaFn
+        : undefined,
+    errorHandler: opts && opts.errorHandlerFn ? opts.errorHandlerFn : undefined,
+  });
 
   METHODS.forEach(m =>
     app[m] = patchMethod<TEntities, TSchema>(

@@ -1,4 +1,5 @@
 import { Express, NextFunction, Request, Response } from 'express';
+import { CustomError } from './error';
 
 // === General ============================================================== //
 export interface Context {
@@ -92,6 +93,13 @@ export type GenerateSchemaErrorFn = (
   source: string,
 ) => any;
 
+export type ErrorHandlerFn<TEntities extends Entities> = (
+  errors: CustomError,
+  req: Req<TEntities, keyof TEntities>,
+  res: Response,
+  next: NextFunction,
+) => any;
+
 // === Arguments ============================================================ //
 export type MiddlewareArg<TEntities extends Entities> =
   | CommonMiddleware<TEntities>
@@ -144,6 +152,7 @@ export interface Opts<
   converters?: Converter<TEntities, TSchema>[];
   compileSchemaFn?: CompileSchema<TSchema>;
   generateSchemaErrorFn?: GenerateSchemaErrorFn;
+  errorHandlerFn?: ErrorHandlerFn<TEntities>;
   validateResponseSchema?: boolean;
 }
 

@@ -5,6 +5,7 @@ import {
   Converter,
   Decorator,
   Entities,
+  ErrorHandlerFn,
   isAsyncMiddleware,
   isMiddleware,
   isNumber,
@@ -15,6 +16,11 @@ import {
 } from './types';
 
 const DEFAULT_STATUS_CODE = 200;
+
+interface AsyncOptions<TEntities extends Entities, TSchema> {
+  compileSchema?: CompileSchema<TSchema>;
+  errorHandler?: ErrorHandlerFn<TEntities>;
+}
 
 type Options = {
   statusCode: number;
@@ -35,6 +41,7 @@ const copyDecorators = <TSrc extends Decorator, TDest extends Decorator>(
 const mapMiddleware = <TEntities extends Entities>(
   middleware: Middleware<TEntities>,
   options?: Options,
+  errorHandler?: ErrorHandlerFn<TEntities>,
 ): CommonMiddleware<TEntities> => {
   const fn: CommonMiddleware<TEntities> = async (req, res, next) => {
     try {
@@ -87,6 +94,10 @@ const mapMiddleware = <TEntities extends Entities>(
 
       const { statusCode, error, extra } = err;
 
+      // User defined error handler for all middlewares in app
+      if (errorHandler) {
+        return errorHandler(err, req, res, next);
+      }
       return res.status(statusCode || 500).send({ error, ...extra });
     }
   };
@@ -97,7 +108,7 @@ const mapMiddleware = <TEntities extends Entities>(
 };
 
 export default <TEntities extends Entities, TSchema>(
-  compileSchema?: CompileSchema<TSchema>,
+  { errorHandler, compileSchema }: AsyncOptions<TEntities, TSchema> = {},
 ): Converter<TEntities, TSchema> => (args, context) => {
   const statusCode = args.find(isNumber) || DEFAULT_STATUS_CODE;
 
@@ -119,6 +130,8 @@ export default <TEntities extends Entities, TSchema>(
           m === lastMiddleware
             ? { statusCode, validateSchema }
             : undefined,
+          // Passes a custom error handler
+          errorHandler,
         )
       : m,
   );

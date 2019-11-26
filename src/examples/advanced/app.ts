@@ -12,6 +12,7 @@ import createApp, { Req } from './async-app';
 import can from './can';
 import { addTodo, addUser, getTodosForUser } from './db';
 import load from './load';
+import purgeUser from './purgeUser';
 
 const app = createApp();
 app.use(bodyParser.json());
@@ -57,6 +58,8 @@ app.get(
   load.user.fromParams(),
   (req: Req<'user'>) => req.user,
 );
+
+app.use('/users/purge', purgeUser);
 
 // --- TODOs ---------------------------------------------------------------- //
 app.post(

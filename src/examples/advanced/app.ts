@@ -25,6 +25,12 @@ app.get(
 );
 
 app.get(
+  '/deprecated-for',
+  deprecate.for('/not-deprecated'),
+  () => `we should remove this, you should go there it's better`,
+);
+
+app.get(
   '/deprecated/todos/:username',
   deprecate.redirect(({ params }) => `/todos/${params.username}`),
 );

@@ -12,9 +12,31 @@ type Method =
   | 'POST'
   | 'PUT'
   | 'TRACE'
-  ;
+;
+
+type MethodGetter = Method|((r: Request) => Method);
 type PathGetter = string|((r: Request) => string);
 type BodyGetter = (r: Request) => any;
+
+const pathWith = (getter: PathGetter, req: Request): string =>
+  typeof getter === 'function' ? getter(req) : getter;
+const methodWith = (getter: MethodGetter, req: Request): Method =>
+  typeof getter === 'function' ? getter(req) : getter;
+
+export const forImpl = (
+  path: PathGetter,
+  method?: MethodGetter,
+): Middleware<Entities> => decorate(
+  { $deprecated: 'in-use' },
+  (req: Request, res: Response, next: NextFunction) => {
+    const methodGetter = method || (req.method as Method);
+    const actualPath = pathWith(path, req);
+    const actualMethod = methodWith(methodGetter, req).toUpperCase();
+    res.set('Deprecated-For', `${actualMethod} ${actualPath}`);
+
+    next();
+  },
+);
 
 export const endpoint: Middleware<Entities> = decorate(
   { $deprecated: 'in-use' },
@@ -30,7 +52,7 @@ export const redirect = (
 ): Middleware<Entities> => decorate(
   { $deprecated: 'redirect' },
   (req: Request, res: Response, _: NextFunction) => {
-    const actualPath = typeof path === 'function' ? path(req) : path;
+    const actualPath = pathWith(path, req);
     res.set('Deprecated-For', `GET ${actualPath}`);
     res.redirect(status, actualPath);
   },
@@ -48,7 +70,7 @@ export const rewrite = (
   return decorate(
     { $deprecated: 'rewrite' },
     (req: Request, res: Response, next: NextFunction) => {
-      const actualPath = pathGetter(req);
+      const actualPath = pathWith(pathGetter, req);
       res.set('Deprecated-For', `${method} ${actualPath}`);
       req.method = method;
       req.url = actualPath;
@@ -60,6 +82,7 @@ export const rewrite = (
 
 export const deprecate = {
   endpoint,
+  for: forImpl,
   redirect,
   rewrite,
 };

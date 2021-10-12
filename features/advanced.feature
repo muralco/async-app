@@ -113,12 +113,17 @@ Scenario: get TODOs for an invalid user
   Then the response is 404 and the payload at error is "USER"
 
 # Deprecated
-Scenario: deprecated
+Scenario: deprecate.endpoint
   When GET /deprecated
   Then the response is 200
   And the response headers at deprecated is "true"
 
-Scenario: deprecated get user
+Scenario: deprecate.for
+  When GET /deprecated-for
+  Then the response is 200
+  And the response headers at deprecated-for is "GET /not-deprecated"
+
+Scenario: deprecate.endpoint get user
   Given a user U with { "username": "${random}", "name": "Paul ${random}" }
   When GET /deprecated/user/${U.username}
   Then the response is 200 and the payload is
@@ -130,10 +135,11 @@ Scenario: deprecated get user
     """
   And the response headers at deprecated-for is "GET /users/${U.username}"
 
-Scenario: deprecated get todos
+Scenario: deprecate.rewrite get todos
   Given a user U with { "username": "${random}", "name": "Ringo ${random}" }
   And a todo T with { "owner": "${U.username}", "item": "Autograph a photo for Marge" }
   When GET /deprecated/todos/${U.username}
   Then the response is 302
   And the response headers at deprecated-for is "GET /todos/${U.username}"
   And the response headers at location contains "/todos/${U.username}"
+

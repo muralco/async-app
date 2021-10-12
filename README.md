@@ -458,6 +458,14 @@ app.get(
   req => weShouldRemoveThisFunctionEventually(req),
 );
 
+// Or you could potentially give a different location for the call, without
+// rewriting the request.
+app.get(
+  '/old-stuff',
+  deprecate.for('/new-stuff'),
+  req => weShouldRemoveThisFunctionEventually(req),
+);
+
 // Mark the endpoint as deprecated and rewrite the route so that a later
 // (correct) route picks it up (e.g. `PATCH /parties/:id`)
 app.put(  // oops, should've used PATCH 🤦
@@ -486,7 +494,7 @@ The deprecation response header for `deprecate.endpoint` is:
 Deprecated: true
 ```
 
-The deprecation response header for both `redirect` and `rewrite` is:
+The deprecation response header for `for`, `redirect`, and `rewrite` is:
 ```
 Deprecated-For: <method> <path>
 ```

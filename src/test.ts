@@ -25,11 +25,14 @@ const setup: SetupFn = ({ compare, getCtx, Given, setCtx, Then, When }) => {
   };
 
   Given(
-    'a loader "{word}" that provides {strings}(?: and requires {strings})?',
-    (name, provides, requires) => addMiddleware(name, {
-      $provides: JSON.parse(provides),
-      $requires: JSON.parse(requires || '[]'),
-    }),
+    // tslint:disable-next-line: max-line-length
+    'a (priority )?loader "{word}" that provides {strings}(?: and requires {strings})?',
+    (priority, name, provides, requires) =>
+      addMiddleware(name, {
+        $noOrder: !!priority,
+        $provides: JSON.parse(provides),
+        $requires: JSON.parse(requires || '[]'),
+      }),
   );
   Given(
     'a permission "{word}" that requires (.*)',

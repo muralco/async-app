@@ -75,6 +75,14 @@ pickledCucumber(setup, {
     strings: /\[[^\]]*\]/,
   },
   entities,
-  http: httpSupertest(supertest(advancedApp) as any),
+  http: httpSupertest(supertest(advancedApp) as any, {
+    applyCredentials: (req) => {
+      if (!req.headers) {
+        req.headers = {};
+      }
+      (req.headers as any)['Authorization'] = req.credentials;
+      return req;
+    },
+  }),
   usage: true,
 });

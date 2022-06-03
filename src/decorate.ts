@@ -14,3 +14,6 @@ const set = <T extends keyof Decorator>(key: T) =>
 export const permission = set('$permission');
 export const provides = set('$provides');
 export const requires = set('$requires');
+export const prioritize = <TEntities extends Entities>(
+  fn: Middleware<TEntities>,
+) => decorate({ $noOrder: true }, fn);

@@ -3,7 +3,7 @@
 // +========================================================================+ //
 
 // In your case this is `from 'async-app'`
-import { loadOnceWith, loadWith } from '../..';
+import { loadOnceWith, loadWith, prioritize } from '../..';
 import { ExampleEntities } from './async-app';
 import { getTodo, getUser } from './db';
 
@@ -26,6 +26,15 @@ const load = {
       loadTodo(req => req.params[paramName], 'todo'),
   },
   user: {
+    // Always have authorization loader first no matter the dependencies
+    // among middlewares
+    fromAuthorization: () =>
+      prioritize(
+        loadUser(
+          req => req.headers && req.headers.authorization || '',
+          'user',
+        ),
+      ),
     fromParams: (paramName = 'username') =>
       loadUser(req => req.params[paramName], 'user'),
     fromTodo: () => loadUserWith(

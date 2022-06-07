@@ -88,17 +88,6 @@ app.post(
 );
 
 app.get(
-  '/todos/:todoId/mine',
-  'Returns a TODO of the current user',
-  load.todo.fromParams(),
-  can.view.todo(),
-  // This gets hoisted with higher priority than todo loader and any
-  // other middleware 👇
-  load.user.fromAuthorization(),
-  (req: Req<'user'>) => getTodosForUser(req.user.username),
-);
-
-app.get(
   '/todos/:username',
   'Returns the TODOs for the specified user',
   load.user.fromParams(),

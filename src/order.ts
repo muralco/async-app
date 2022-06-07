@@ -53,7 +53,7 @@ const printBrokenMiddleware = <TEntities extends Entities>({
 }: Middleware<TEntities>) =>
   JSON.stringify({ $permission, $provides, $requires });
 
-const findRequirements = <TEntities extends Entities>(
+const findRequirementsAcyclic = <TEntities extends Entities>(
   pmap: ProviderMap<TEntities>,
   m: Middleware<TEntities>,
   existing: Middleware<TEntities>[],
@@ -89,11 +89,18 @@ const findRequirements = <TEntities extends Entities>(
     ...withoutRequirements,
     ...flatten(
       withRequirements.map(p =>
-          findRequirements(pmap, p, newExisting, context)),
+          findRequirementsAcyclic(pmap, p, newExisting, context)),
     ),
     m,
   ];
 };
+
+const findRequirements = <TEntities extends Entities>(
+  pmap: ProviderMap<TEntities>,
+  m: Middleware<TEntities>,
+  context: Context,
+): Middleware<TEntities>[] =>
+  findRequirementsAcyclic(pmap, m, [], context);
 
 export default <TEntities extends Entities, TSchema>() => (
   args: ArgumentOption<TEntities, TSchema>[],
@@ -106,18 +113,14 @@ export default <TEntities extends Entities, TSchema>() => (
 
   // Split functions to handle loaders and permissions separately
   const [noOrder, middlewares] = partition(functions, isNonOrderable);
-  const noOrderProvided = flatten(noOrder.map(m => m.$provides || []));
 
   // Validate that every requirement is met
   const everythingRequired = flatten(
     middlewares.map(m => m.$requires || []),
   );
-  const everythingProvided = [
-    ...noOrderProvided,
-    ...flatten(
-      middlewares.map(m => m.$provides || []),
-    ),
-  ];
+  const everythingProvided = flatten(
+    middlewares.map(m => m.$provides || []),
+  );
   const missing = difference(everythingRequired, everythingProvided);
   if (missing.length) {
     throw new Error(`Error in \`${context.method} ${context.path}\`:
@@ -136,13 +139,13 @@ export default <TEntities extends Entities, TSchema>() => (
 
   // The goal is to add permissions as soon as possible, but in order to add
   // them, we first need to satisfy their requirements.
-  const providerMap = createProviderMap([...noOrder, ...middlewares]);
+  const providerMap = createProviderMap(middlewares);
 
   // We transform each permission into a list of middlewares required to inject
   // that permission, then sort them from least to most requirements
   const permissions = middlewares
     .filter(isPermissionMiddleware)
-    .map(p => findRequirements(providerMap, p, noOrder, context))
+    .map(p => findRequirements(providerMap, p, context))
     .sort((a, b) => a.length - b.length);
 
   // Lets do this...

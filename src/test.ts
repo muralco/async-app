@@ -25,14 +25,11 @@ const setup: SetupFn = ({ compare, getCtx, Given, setCtx, Then, When }) => {
   };
 
   Given(
-    // tslint:disable-next-line: max-line-length
-    'a (priority )?loader "{word}" that provides {strings}(?: and requires {strings})?',
-    (priority, name, provides, requires) =>
-      addMiddleware(name, {
-        $noOrder: !!priority,
-        $provides: JSON.parse(provides),
-        $requires: JSON.parse(requires || '[]'),
-      }),
+    'a loader "{word}" that provides {strings}(?: and requires {strings})?',
+    (name, provides, requires) => addMiddleware(name, {
+      $provides: JSON.parse(provides),
+      $requires: JSON.parse(requires || '[]'),
+    }),
   );
   Given(
     'a permission "{word}" that requires (.*)',
@@ -75,14 +72,6 @@ pickledCucumber(setup, {
     strings: /\[[^\]]*\]/,
   },
   entities,
-  http: httpSupertest(supertest(advancedApp) as any, {
-    applyCredentials: (req) => {
-      if (!req.headers) {
-        req.headers = {};
-      }
-      (req.headers as any)['Authorization'] = req.credentials;
-      return req;
-    },
-  }),
+  http: httpSupertest(supertest(advancedApp) as any),
   usage: true,
 });

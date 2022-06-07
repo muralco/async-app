@@ -2,7 +2,7 @@ import express from 'express';
 import { flattenDeep, isRegExp } from 'lodash';
 
 import asyncConverter from './async';
-import orderMiddlewares from './order';
+import orderMiddlewares from './converters/order-legacy';
 import schemaConverter from './schema';
 
 import {

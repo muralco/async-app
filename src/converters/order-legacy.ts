@@ -11,7 +11,7 @@ import {
   isSchema,
   Middleware,
   ProviderMiddleware,
-} from './types';
+} from '../types';
 
 interface ProviderMap<TEntities extends Entities> {
   [model: string]: ProviderMiddleware<TEntities>;

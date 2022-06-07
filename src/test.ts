@@ -2,10 +2,10 @@ import { deepEqual } from 'assert';
 import pickledCucumber, { SetupFn } from 'pickled-cucumber';
 import httpSupertest from 'pickled-cucumber/http/supertest';
 import supertest from 'supertest';
+import orderMiddlewares from './converters/order-legacy';
 import advancedApp from './examples/advanced/app';
 import { DB } from './examples/advanced/db';
 import { entities } from './examples/advanced/test';
-import orderMiddlewares from './order';
 import { Decorator, Middleware } from './types';
 
 type Mid = Middleware<any> & { $name?: string };

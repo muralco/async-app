@@ -8,6 +8,14 @@ Background:
   And a permission "can(c)" that requires ["c"]
   And a permission "can(a,b)" that requires ["a","b"]
 
+Scenario: This fails
+  When ordering ["load(a)", "load(b)", "can(b)"]
+  Then the order of the middlewares remains unchanged
+
+Scenario: This is ok
+  When ordering ["load(a)", "load(b)", "can(a,b)"]
+  Then the order of the middlewares remains unchanged
+
 Scenario: no order
   When ordering ["load(b)", "can(b)", "load(a)"]
   Then the order of the middlewares remains unchanged

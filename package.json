@@ -41,7 +41,7 @@
     "lodash": "^4.17.11"
   },
   "scripts": {
-    "build": "npm run lint && tsc",
+    "build": "tsc",
     "dist": "rm -rf dist && npm run build && npm run test && cp package*.json README.md LICENSE dist && rm -rf ./dist/test.* ./dist/examples",
     "lint": "tslint -p .",
     "pack": "npm run dist && cd dist && npm pack",

@@ -15,7 +15,7 @@ import {
   ValidateSchema,
 } from './types';
 
-const DEFAULT_STATUS_CODE = 200;
+const DEFAULT_STATUS_CODE = 200
 
 interface AsyncOptions<TEntities extends Entities, TSchema> {
   compileSchema?: CompileSchema<TSchema>;

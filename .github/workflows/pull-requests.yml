@@ -10,6 +10,8 @@ jobs:
   install:
     name: Install dependencies
     runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.build.outputs.image-uri }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -30,18 +32,24 @@ jobs:
     name: Linter
     runs-on: ubuntu-latest
     needs: [install]
+    container:
+      image: ${{ needs.install.outputs.image }}
     steps:
       - run: npm run lint
   test:
     name: Run tests
     runs-on: ubuntu-latest
     needs: [install]
+    container:
+      image: ${{ needs.install.outputs.image }}
     steps:
       - run: npm run test
   build:
     name: Build application
     runs-on: ubuntu-latest
     needs: [install]
+    container:
+      image: ${{ needs.install.outputs.image }}
     steps:
       - run: npm run build
   # TODO:

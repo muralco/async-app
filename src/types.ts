@@ -158,7 +158,8 @@ export interface Opts<
   compileSchemaFn?: CompileSchema<TSchema>;
   generateSchemaErrorFn?: GenerateSchemaErrorFn;
   errorHandlerFn?: ErrorHandlerFn<TEntities>;
-  validateResponseSchema?: boolean;
+  validateResponseSchema?: boolean; // default: false
+  noMiddlewareOrder?: boolean; // default: false
 }
 
 export type Method = keyof AsyncApp<Entities, unknown>;

@@ -1,8 +1,9 @@
 import express from 'express';
-import { flattenDeep, isRegExp } from 'lodash';
+import { compact, flattenDeep, isRegExp } from 'lodash';
 
 import asyncConverter from './async';
-import orderMiddlewares from './converters/order-legacy';
+import { converterId } from './converters/order';
+import legacyOrderConverter from './converters/order-legacy';
 import schemaConverter from './schema';
 
 import {
@@ -72,6 +73,7 @@ export const createApp = <TEntities extends Entities = Entities, TSchema = {}>(
 ): App<TEntities, TSchema> => {
   const app = express() as App<TEntities, TSchema>;
   const {
+    noMiddlewareOrder = false,
     converters = [],
     compileSchemaFn,
     generateSchemaErrorFn,
@@ -85,6 +87,16 @@ export const createApp = <TEntities extends Entities = Entities, TSchema = {}>(
       compileSchemaFn,
       generateSchemaErrorFn,
     );
+  }
+
+  let order: Converter<TEntities, TSchema>;
+  if (!noMiddlewareOrder) {
+    const converterIds = compact(converters.map(c => c.converterId));
+    // We only check if the new order converter is present
+    if (!converterIds.includes(converterId)) {
+      // This is for backward compatibility
+      order = legacyOrderConverter();
+    }
   }
 
   const async = asyncConverter<TEntities, TSchema>({
@@ -101,7 +113,7 @@ export const createApp = <TEntities extends Entities = Entities, TSchema = {}>(
         async,
         ...converters,
         ...(schema && [schema]),
-        orderMiddlewares<TEntities, TSchema>(),
+        ...(order && [order]),
       ]) as any),
   );
 

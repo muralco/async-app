@@ -140,10 +140,15 @@ export const isMiddleware = <TEntities extends Entities>(
   typeof o === 'function';
 
 // === Converters, App and options ========================================== //
-export type Converter<TEntities extends Entities, TSchema> = (
+type ConverterFn<TEntities extends Entities, TSchema> = (
   m: ArgumentOption<TEntities, TSchema>[],
   context: Context,
 ) => ArgumentOption<TEntities, TSchema>[];
+
+export type Converter<TEntities extends Entities, TSchema> = ConverterFn<
+  TEntities,
+  TSchema
+> & { converterId?: string };
 
 export interface Opts<
   TEntities extends Entities,

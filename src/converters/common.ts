@@ -13,6 +13,11 @@ import {
   ProviderMiddleware,
 } from '../types';
 
+export type ProviderOrderFn<TEntities extends Entities> = (
+  providers: ProviderMiddleware<TEntities>[],
+  middlewares: Middleware<TEntities>[],
+) => ProviderMiddleware<TEntities>[];
+
 interface ProviderMap<TEntities extends Entities> {
   [model: string]: ProviderMiddleware<TEntities>;
 }
@@ -53,11 +58,13 @@ const printBrokenMiddleware = <TEntities extends Entities>({
 }: Middleware<TEntities>) =>
   JSON.stringify({ $permission, $provides, $requires });
 
-const findRequirementsAcyclic = <TEntities extends Entities>(
+const findRequirements = <TEntities extends Entities>(
   pmap: ProviderMap<TEntities>,
   m: Middleware<TEntities>,
-  existing: Middleware<TEntities>[],
+  originalMiddlewares: Middleware<TEntities>[],
   context: Context,
+  providerOrderFn: ProviderOrderFn<TEntities> = prov => prov,
+  existing: Middleware<TEntities>[] = [],
 ): Middleware<TEntities>[] => {
   if (existing.includes(m)) {
     throw new Error(`Error in \`${context.method} ${context.path}\`:
@@ -86,21 +93,22 @@ const findRequirementsAcyclic = <TEntities extends Entities>(
   ];
 
   return [
-    ...withoutRequirements,
+    ...providerOrderFn(withoutRequirements, originalMiddlewares),
     ...flatten(
       withRequirements.map(p =>
-          findRequirementsAcyclic(pmap, p, newExisting, context)),
+        findRequirements(
+          pmap,
+          p,
+          originalMiddlewares,
+          context,
+          providerOrderFn,
+          newExisting,
+        ),
+      ),
     ),
     m,
   ];
 };
-
-const findRequirements = <TEntities extends Entities>(
-  pmap: ProviderMap<TEntities>,
-  m: Middleware<TEntities>,
-  context: Context,
-): Middleware<TEntities>[] =>
-  findRequirementsAcyclic(pmap, m, [], context);
 
 export function getOrderConverter<
   TEntities extends Entities,
@@ -146,7 +154,7 @@ export function getOrderConverter<
     // inject that permission, then sort them from least to most requirements
     const permissions = middlewares
       .filter(isPermissionMiddleware)
-      .map((p) => findRequirements(providerMap, p, context))
+      .map((p) => findRequirements(providerMap, p, middlewares, context))
       .sort((a, b) => a.length - b.length);
 
     // Lets do this...

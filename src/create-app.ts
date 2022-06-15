@@ -68,36 +68,39 @@ const METHODS: Method[] = [
 ];
 
 export const createApp = <TEntities extends Entities = Entities, TSchema = {}>(
-  opts?: Opts<TEntities, TSchema>,
+  opts: Opts<TEntities, TSchema> = {},
 ): App<TEntities, TSchema> => {
   const app = express() as App<TEntities, TSchema>;
-  const converters = opts && opts.converters || [];
+  const {
+    converters = [],
+    compileSchemaFn,
+    generateSchemaErrorFn,
+    validateResponseSchema,
+    errorHandlerFn,
+  } = opts;
 
-  if (opts && opts.compileSchemaFn) {
-    converters.push(schemaConverter(
-      opts.compileSchemaFn,
-      opts.generateSchemaErrorFn,
+  if (compileSchemaFn) {
+    converters.push(schemaConverter<TEntities, TSchema>(
+      compileSchemaFn,
+      generateSchemaErrorFn,
     ));
   }
 
   const async = asyncConverter<TEntities, TSchema>({
     compileSchema:
-      opts && opts.compileSchemaFn && opts.validateResponseSchema
-        ? opts.compileSchemaFn
+      compileSchemaFn && validateResponseSchema
+        ? compileSchemaFn
         : undefined,
-    errorHandler: opts && opts.errorHandlerFn ? opts.errorHandlerFn : undefined,
+    errorHandler: errorHandlerFn,
   });
 
-  METHODS.forEach(m =>
-    app[m] = patchMethod<TEntities, TSchema>(
-      app,
-      m,
-      [
+  METHODS.forEach(
+    m =>
+      (app[m] = patchMethod<TEntities, TSchema>(app, m, [
         async,
         ...converters,
         orderMiddlewares<TEntities, TSchema>(),
-      ],
-    ) as any,
+      ]) as any),
   );
 
   return app;

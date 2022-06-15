@@ -79,11 +79,12 @@ export const createApp = <TEntities extends Entities = Entities, TSchema = {}>(
     errorHandlerFn,
   } = opts;
 
+  let schema: Converter<TEntities, TSchema>;
   if (compileSchemaFn) {
-    converters.push(schemaConverter<TEntities, TSchema>(
+    schema = schemaConverter<TEntities, TSchema>(
       compileSchemaFn,
       generateSchemaErrorFn,
-    ));
+    );
   }
 
   const async = asyncConverter<TEntities, TSchema>({
@@ -99,6 +100,7 @@ export const createApp = <TEntities extends Entities = Entities, TSchema = {}>(
       (app[m] = patchMethod<TEntities, TSchema>(app, m, [
         async,
         ...converters,
+        ...(schema && [schema]),
         orderMiddlewares<TEntities, TSchema>(),
       ]) as any),
   );

@@ -113,7 +113,9 @@ const findRequirements = <TEntities extends Entities>(
 export function getOrderConverter<
   TEntities extends Entities,
   TSchema
->(): Converter<TEntities, TSchema> {
+>(
+  providerOrderFn?: ProviderOrderFn<TEntities>,
+): Converter<TEntities, TSchema> {
   return (args, context) => {
     // Split arguments to organize them by type
     const strings = args.filter(isString);
@@ -154,7 +156,9 @@ export function getOrderConverter<
     // inject that permission, then sort them from least to most requirements
     const permissions = middlewares
       .filter(isPermissionMiddleware)
-      .map((p) => findRequirements(providerMap, p, middlewares, context))
+      .map(p =>
+        findRequirements(providerMap, p, middlewares, context, providerOrderFn)
+      )
       .sort((a, b) => a.length - b.length);
 
     // Lets do this...

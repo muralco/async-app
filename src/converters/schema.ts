@@ -6,10 +6,12 @@ import {
   GenerateSchemaErrorFn,
   isSchema,
   Middleware,
+  NamedConverter,
   RequestScope,
   Scope,
   ValidateSchema,
 } from '../types';
+import { nameConverter } from './common';
 
 const METHOD_SOURCE_MAP: { [key: string]: Scope } = {
   delete: 'query',
@@ -45,30 +47,35 @@ const createMiddleware = <TEntities extends Entities>(
       return next();
     };
 
-export default <TEntities extends Entities, TSchema>(
+export const converterId = 'schemaConverter';
+
+export default function schemaConverter<TEntities extends Entities, TSchema>(
   compileSchema: CompileSchema<TSchema>,
   generateError = defaultGenerateError,
-) => (
-  middlewares: ArgumentOption<TEntities, TSchema>[],
-  context: Context,
-): ArgumentOption<TEntities, TSchema>[] => {
-  const schema = middlewares
-    .filter(isSchema<TSchema>())
-    .find(s => s.$scope !== 'response');
+): NamedConverter<TEntities, TSchema> {
+  const converter = (
+    middlewares: ArgumentOption<TEntities, TSchema>[],
+    context: Context,
+  ): ArgumentOption<TEntities, TSchema>[] => {
+    const schema = middlewares
+      .filter(isSchema<TSchema>())
+      .find(s => s.$scope !== 'response');
 
-  if (!schema) return middlewares;
+    if (!schema) return middlewares;
 
-  const source = schema.$scope || METHOD_SOURCE_MAP[context.method];
+    const source = schema.$scope || METHOD_SOURCE_MAP[context.method];
 
-  if (source === 'response') return middlewares;
+    if (source === 'response') return middlewares;
 
-  const schemaMiddleware = createMiddleware<TEntities>(
-    compileSchema(schema.$schema || schema, context),
-    generateError,
-    source,
-  );
+    const schemaMiddleware = createMiddleware<TEntities>(
+      compileSchema(schema.$schema || schema, context),
+      generateError,
+      source,
+    );
 
-  schemaMiddleware.$noOrder = true;
+    schemaMiddleware.$noOrder = true;
 
-  return [schemaMiddleware, ...middlewares];
-};
+    return [schemaMiddleware, ...middlewares];
+  };
+  return nameConverter(converter, converterId);
+}

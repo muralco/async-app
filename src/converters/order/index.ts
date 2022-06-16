@@ -1,10 +1,11 @@
 import {
-  Converter,
   Entities,
   isProviderMiddleware,
   Middleware,
+  NamedConverter,
   ProviderMiddleware,
 } from '../../types';
+import { nameConverter } from '../common';
 import { getOrderConverter } from './common';
 
 export const converterId = 'orderConverterV2';
@@ -27,11 +28,10 @@ const providerOrderMethod = <TEntities extends Entities>(
 
 export default function orderConverter<TEntities extends Entities, TSchema>(
   opts: Partial<OrderOptions> = {},
-): Converter<TEntities, TSchema> {
+): NamedConverter<TEntities, TSchema> {
   const { noStableSort } = opts;
   const converter = getOrderConverter<TEntities, TSchema>(
     !noStableSort ? providerOrderMethod : undefined,
   );
-  converter.converterId = converterId;
-  return converter;
+  return nameConverter(converter, converterId);
 }

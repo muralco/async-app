@@ -145,6 +145,11 @@ type ConverterFn<TEntities extends Entities, TSchema> = (
   context: Context,
 ) => ArgumentOption<TEntities, TSchema>[];
 
+export type NamedConverter<TEntities extends Entities, TSchema> = Converter<
+  TEntities,
+  TSchema
+> & { converterId: string };
+
 export type Converter<TEntities extends Entities, TSchema> = ConverterFn<
   TEntities,
   TSchema

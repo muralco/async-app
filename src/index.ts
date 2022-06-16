@@ -3,6 +3,7 @@ import createApp from './create-app';
 export * from './decorate';
 export { deprecate } from './deprecate';
 export * from './error';
+export { default as schemaConverter } from './converters/schema';
 export { default as orderConverter } from './converters/order';
 export { loadFromRequest, loadOnceWith, loadOnlyOnce, loadWith } from './load';
 export { computePermissions } from './permissions/compute';

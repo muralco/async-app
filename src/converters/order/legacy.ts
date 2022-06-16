@@ -1,4 +1,5 @@
-import { Entities } from '../../types';
+import { Entities, NamedConverter } from '../../types';
+import { nameConverter } from '../common';
 import { getOrderConverter } from './common';
 
 export const converterId = 'orderConverterV1';
@@ -6,8 +7,7 @@ export const converterId = 'orderConverterV1';
 export default function legacyOrderConverter<
   TEntities extends Entities,
   TSchema
->() {
+>(): NamedConverter<TEntities, TSchema> {
   const converter = getOrderConverter<TEntities, TSchema>();
-  converter.converterId = converterId;
-  return converter;
+  return nameConverter(converter, converterId);
 }

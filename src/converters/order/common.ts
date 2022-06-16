@@ -128,10 +128,10 @@ export function getOrderConverter<
 
     // Validate that every requirement is met
     const everythingRequired = flatten(
-      middlewares.map((m) => m.$requires || [])
+      functions.map((m) => m.$requires || [])
     );
     const everythingProvided = flatten(
-      middlewares.map((m) => m.$provides || [])
+      functions.map((m) => m.$provides || [])
     );
     const missing = difference(everythingRequired, everythingProvided);
     if (missing.length) {
@@ -151,14 +151,21 @@ export function getOrderConverter<
 
     // The goal is to add permissions as soon as possible, but in order to add
     // them, we first need to satisfy their requirements.
-    const providerMap = createProviderMap(middlewares);
+    const providerMap = createProviderMap(functions);
 
     // We transform each permission into a list of middlewares required to
     // inject that permission, then sort them from least to most requirements
     const permissions = middlewares
       .filter(isPermissionMiddleware)
       .map(p =>
-        findRequirements(providerMap, p, middlewares, context, providerOrderFn)
+        findRequirements(
+          providerMap,
+          p,
+          middlewares,
+          context,
+          providerOrderFn,
+          noOrder,
+        ),
       )
       .sort((a, b) => a.length - b.length);
 

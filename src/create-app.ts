@@ -4,7 +4,7 @@ import { compact, flattenDeep, isRegExp } from 'lodash';
 import asyncConverter from './async';
 import { converterId } from './converters/order';
 import legacyOrderConverter from './converters/order/legacy';
-import schemaConverter from './schema';
+import schemaConverter from './converters/schema';
 
 import {
   App,

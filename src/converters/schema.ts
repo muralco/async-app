@@ -9,7 +9,7 @@ import {
   RequestScope,
   Scope,
   ValidateSchema,
-} from './types';
+} from '../types';
 
 const METHOD_SOURCE_MAP: { [key: string]: Scope } = {
   delete: 'query',

@@ -3,7 +3,7 @@ import pickledCucumber, { SetupFn } from 'pickled-cucumber';
 import httpSupertest from 'pickled-cucumber/http/supertest';
 import supertest from 'supertest';
 import newOrderConverter from './converters/order';
-import legacyOrderConverter from './converters/order-legacy';
+import legacyOrderConverter from './converters/order/legacy';
 import advancedApp from './examples/advanced/app';
 import { DB } from './examples/advanced/db';
 import { entities } from './examples/advanced/test';

@@ -1,4 +1,4 @@
-import { Entities } from '../types';
+import { Entities } from '../../types';
 import { getOrderConverter } from './common';
 
 export const converterId = 'orderConverterV1';

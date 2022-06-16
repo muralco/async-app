@@ -4,7 +4,7 @@ import {
   isProviderMiddleware,
   Middleware,
   ProviderMiddleware,
-} from '../types';
+} from '../../types';
 import { getOrderConverter } from './common';
 
 export const converterId = 'orderConverterV2';

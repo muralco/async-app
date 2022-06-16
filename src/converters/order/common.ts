@@ -11,7 +11,7 @@ import {
   isSchema,
   Middleware,
   ProviderMiddleware,
-} from '../types';
+} from '../../types';
 
 export type ProviderOrderFn<TEntities extends Entities> = (
   providers: ProviderMiddleware<TEntities>[],

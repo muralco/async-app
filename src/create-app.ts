@@ -2,9 +2,11 @@ import express from 'express';
 import { compact, flattenDeep, isRegExp } from 'lodash';
 
 import asyncConverter from './async';
-import { converterId } from './converters/order';
+import { converterId as orderConverterId } from './converters/order';
 import legacyOrderConverter from './converters/order/legacy';
-import schemaConverter from './converters/schema';
+import schemaConverter, {
+  converterId as schemaConverterId,
+} from './converters/schema';
 
 import {
   App,
@@ -81,20 +83,25 @@ export const createApp = <TEntities extends Entities = Entities, TSchema = {}>(
     errorHandlerFn,
   } = opts;
 
+  const converterIds = compact(converters.map(c => c.converterId));
+
   let schema: Converter<TEntities, TSchema>;
   if (compileSchemaFn) {
-    schema = schemaConverter<TEntities, TSchema>(
-      compileSchemaFn,
-      generateSchemaErrorFn,
-    );
+    // We check if the schema converter is present
+    // if not we include it as our backward compatibility policy
+    if (!converterIds.includes(schemaConverterId)) {
+      schema = schemaConverter<TEntities, TSchema>(
+        compileSchemaFn,
+        generateSchemaErrorFn,
+      );
+    }
   }
 
   let order: Converter<TEntities, TSchema>;
   if (!noMiddlewareOrder) {
-    const converterIds = compact(converters.map(c => c.converterId));
-    // We only check if the new order converter is present
-    if (!converterIds.includes(converterId)) {
-      // This is for backward compatibility
+    // We check if the new order converter is present
+    // if not we include it as our backward compatibility policy
+    if (!converterIds.includes(orderConverterId)) {
       order = legacyOrderConverter();
     }
   }

@@ -1,4 +1,4 @@
-import { deepEqual } from 'assert';
+import { deepEqual, equal } from 'assert';
 import pickledCucumber, { SetupFn } from 'pickled-cucumber';
 import httpSupertest from 'pickled-cucumber/http/supertest';
 import supertest from 'supertest';
@@ -69,11 +69,15 @@ const setup: SetupFn = ({ compare, getCtx, Given, setCtx, Then, When }) => {
       const orderConverter = newConverter === 'new'
         ? newOrderConverter(parsedOptions)
         : legacyOrderConverter();
-      const sorted = orderConverter(
-        original.map(o => map[o]),
-        { method: 'post' },
-      );
-      setCtx('$sorted', sorted.map(m => getName(m as Mid) || ''));
+      try {
+        const sorted = orderConverter(
+          original.map(o => map[o]),
+          { method: 'post' },
+        );
+        setCtx('$sorted', sorted.map(m => getName(m as Mid) || ''));
+      } catch (e) {
+        setCtx('$error', e);
+      }
     },
     { optional: 'with' },
   );
@@ -84,6 +88,13 @@ const setup: SetupFn = ({ compare, getCtx, Given, setCtx, Then, When }) => {
   Then(
     'the ordered middlewares are (.*)',
     expected => deepEqual(getCtx('$sorted'), JSON.parse(expected)),
+  );
+  Then(
+    'the ordering resulted (ok|with error)',
+    (expected) => {
+      const error = getCtx('$error');
+      equal(expected !== 'ok', !!error);
+    },
   );
   // === Advanced example =================================================== //
   Then(

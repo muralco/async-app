@@ -12,6 +12,7 @@ export const converterId = 'orderConverterV2';
 
 export interface OrderOptions {
   noStableSort: boolean;
+  warnOrdering: boolean;
 }
 
 const providerOrderMethod = <TEntities extends Entities>(
@@ -29,9 +30,10 @@ const providerOrderMethod = <TEntities extends Entities>(
 export default function orderConverter<TEntities extends Entities, TSchema>(
   opts: Partial<OrderOptions> = {},
 ): NamedConverter<TEntities, TSchema> {
-  const { noStableSort } = opts;
+  const { noStableSort, warnOrdering } = opts;
   const converter = getOrderConverter<TEntities, TSchema>(
     !noStableSort ? providerOrderMethod : undefined,
+    warnOrdering,
   );
   return nameConverter(converter, converterId);
 }

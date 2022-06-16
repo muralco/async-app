@@ -115,6 +115,7 @@ export function getOrderConverter<
   TSchema
 >(
   providerOrderFn?: ProviderOrderFn<TEntities>,
+  warnOrdering: boolean = false,
 ): Converter<TEntities, TSchema> {
   return (args, context) => {
     // Split arguments to organize them by type
@@ -174,6 +175,13 @@ export function getOrderConverter<
     const ms = [...strings, ...objects, ...orderedMiddlewares].filter(
       (m) => !!m
     );
+
+    if (warnOrdering && args.some((a, i) => ms[i] !== a)) {
+      // Sanity check for arguments ordering
+      throw new Error(
+        `Middleware ordering is wrong in \`${context.method} ${context.path}\``
+      );
+    }
 
     return ms;
   };

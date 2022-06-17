@@ -140,10 +140,20 @@ export const isMiddleware = <TEntities extends Entities>(
   typeof o === 'function';
 
 // === Converters, App and options ========================================== //
-export type Converter<TEntities extends Entities, TSchema> = (
+type ConverterFn<TEntities extends Entities, TSchema> = (
   m: ArgumentOption<TEntities, TSchema>[],
   context: Context,
 ) => ArgumentOption<TEntities, TSchema>[];
+
+export type NamedConverter<TEntities extends Entities, TSchema> = Converter<
+  TEntities,
+  TSchema
+> & { converterId: string };
+
+export type Converter<TEntities extends Entities, TSchema> = ConverterFn<
+  TEntities,
+  TSchema
+> & { converterId?: string };
 
 export interface Opts<
   TEntities extends Entities,
@@ -153,7 +163,8 @@ export interface Opts<
   compileSchemaFn?: CompileSchema<TSchema>;
   generateSchemaErrorFn?: GenerateSchemaErrorFn;
   errorHandlerFn?: ErrorHandlerFn<TEntities>;
-  validateResponseSchema?: boolean;
+  validateResponseSchema?: boolean; // default: false
+  noMiddlewareOrder?: boolean; // default: false
 }
 
 export type Method = keyof AsyncApp<Entities, unknown>;

@@ -1,9 +1,12 @@
 import express from 'express';
-import { flattenDeep, isRegExp } from 'lodash';
+import { compact, flattenDeep, isRegExp } from 'lodash';
 
 import asyncConverter from './async';
-import orderMiddlewares from './order';
-import schemaConverter from './schema';
+import { converterId as orderConverterId } from './converters/order';
+import legacyOrderConverter from './converters/order/legacy';
+import schemaConverter, {
+  converterId as schemaConverterId,
+} from './converters/schema';
 
 import {
   App,
@@ -68,36 +71,57 @@ const METHODS: Method[] = [
 ];
 
 export const createApp = <TEntities extends Entities = Entities, TSchema = {}>(
-  opts?: Opts<TEntities, TSchema>,
+  opts: Opts<TEntities, TSchema> = {},
 ): App<TEntities, TSchema> => {
   const app = express() as App<TEntities, TSchema>;
-  const converters = opts && opts.converters || [];
+  const {
+    noMiddlewareOrder = false,
+    converters = [],
+    compileSchemaFn,
+    generateSchemaErrorFn,
+    validateResponseSchema,
+    errorHandlerFn,
+  } = opts;
 
-  if (opts && opts.compileSchemaFn) {
-    converters.push(schemaConverter(
-      opts.compileSchemaFn,
-      opts.generateSchemaErrorFn,
-    ));
+  const converterIds = compact(converters.map(c => c.converterId));
+
+  let schema: Converter<TEntities, TSchema>;
+  if (compileSchemaFn) {
+    // We check if the schema converter is present
+    // if not we include it as our backward compatibility policy
+    if (!converterIds.includes(schemaConverterId)) {
+      schema = schemaConverter<TEntities, TSchema>(
+        compileSchemaFn,
+        generateSchemaErrorFn,
+      );
+    }
+  }
+
+  let order: Converter<TEntities, TSchema>;
+  if (!noMiddlewareOrder) {
+    // We check if the new order converter is present
+    // if not we include it as our backward compatibility policy
+    if (!converterIds.includes(orderConverterId)) {
+      order = legacyOrderConverter();
+    }
   }
 
   const async = asyncConverter<TEntities, TSchema>({
     compileSchema:
-      opts && opts.compileSchemaFn && opts.validateResponseSchema
-        ? opts.compileSchemaFn
+      compileSchemaFn && validateResponseSchema
+        ? compileSchemaFn
         : undefined,
-    errorHandler: opts && opts.errorHandlerFn ? opts.errorHandlerFn : undefined,
+    errorHandler: errorHandlerFn,
   });
 
-  METHODS.forEach(m =>
-    app[m] = patchMethod<TEntities, TSchema>(
-      app,
-      m,
-      [
+  METHODS.forEach(
+    m =>
+      (app[m] = patchMethod<TEntities, TSchema>(app, m, [
         async,
         ...converters,
-        orderMiddlewares<TEntities, TSchema>(),
-      ],
-    ) as any,
+        ...(schema && [schema]),
+        ...(order && [order]),
+      ]) as any),
   );
 
   return app;

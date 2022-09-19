@@ -67,6 +67,34 @@ Scenario: do not delete a not existing user and respond with a custom error
   Then the response is 400
   And the response payload at error is "invalid_user"
 
+Scenario: mapAsyncResultFn
+  When GET /echo1
+  Then the response is 200 and the payload is
+    """
+    {
+      "isAsyncMiddleware": true,
+      "isLastMiddleware": true,
+      "method": "GET",
+      "path": "/echo1"
+    }
+    """
+
+Scenario: mapAsyncResultFn
+  When GET /echo2
+  Then the response is 200 and the payload is { "last": true }
+
+Scenario: mapAsyncResultFn
+  When GET /echo2?throw=true
+  Then the response is 500 and the payload at error is "NOT_LAST"
+
+Scenario: mapAsyncResultFn
+  When GET /echo3
+  Then the response is 200 and the payload is { "last": true }
+
+Scenario: mapAsyncResultFn
+  When GET /echo3?throw=true
+  Then the response is 500 and the payload at error is "NOT_ASYNC"
+
 # Edges
 
 Scenario: create a user without username

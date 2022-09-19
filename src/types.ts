@@ -145,6 +145,15 @@ export type Converter<TEntities extends Entities, TSchema> = (
   context: Context,
 ) => ArgumentOption<TEntities, TSchema>[];
 
+export type MapAsyncResultFn<TEntities extends Entities> = (
+  value: unknown,
+  opts: {
+    isAsyncMiddleware: boolean,
+    isLastMiddleware: boolean,
+    req: Req<TEntities, keyof TEntities>,
+  },
+) => unknown;
+
 export interface Opts<
   TEntities extends Entities,
   TSchema,
@@ -154,6 +163,7 @@ export interface Opts<
   generateSchemaErrorFn?: GenerateSchemaErrorFn;
   errorHandlerFn?: ErrorHandlerFn<TEntities>;
   validateResponseSchema?: boolean;
+  mapAsyncResultFn?: MapAsyncResultFn<TEntities>;
 }
 
 export type Method = keyof AsyncApp<Entities, unknown>;

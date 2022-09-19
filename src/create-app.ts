@@ -86,6 +86,7 @@ export const createApp = <TEntities extends Entities = Entities, TSchema = {}>(
         ? opts.compileSchemaFn
         : undefined,
     errorHandler: opts && opts.errorHandlerFn ? opts.errorHandlerFn : undefined,
+    mapAsyncResultFn: opts && opts.mapAsyncResultFn,
   });
 
   METHODS.forEach(m =>

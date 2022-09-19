@@ -11,6 +11,7 @@ import {
   isNumber,
   isPromise,
   isSchema,
+  MapAsyncResultFn,
   Middleware,
   ValidateSchema,
 } from './types';
@@ -20,11 +21,14 @@ const DEFAULT_STATUS_CODE = 200;
 interface AsyncOptions<TEntities extends Entities, TSchema> {
   compileSchema?: CompileSchema<TSchema>;
   errorHandler?: ErrorHandlerFn<TEntities>;
+  mapAsyncResultFn?: MapAsyncResultFn<TEntities>;
 }
 
-type Options = {
+type Options<TEntities extends Entities> =  {
   statusCode: number;
+  isLastMiddleware: boolean;
   validateSchema?: ValidateSchema;
+  mapAsyncResultFn?: MapAsyncResultFn<TEntities>;
 };
 
 const copyDecorators = <TSrc extends Decorator, TDest extends Decorator>(
@@ -40,7 +44,7 @@ const copyDecorators = <TSrc extends Decorator, TDest extends Decorator>(
 
 const mapMiddleware = <TEntities extends Entities>(
   middleware: Middleware<TEntities>,
-  options?: Options,
+  options: Options<TEntities>,
   errorHandler?: ErrorHandlerFn<TEntities>,
 ): CommonMiddleware<TEntities> => {
   const fn: CommonMiddleware<TEntities> = async (req, res, next) => {
@@ -54,14 +58,24 @@ const mapMiddleware = <TEntities extends Entities>(
         ? promiseOrVoid
         : Promise.resolve(promiseOrVoid);
 
-      const val = await promise;
+      const result = await promise;
 
-      if (!isAsyncMiddleware(middleware)) {
+      const isAsync = isAsyncMiddleware(middleware);
+
+      const val = options.mapAsyncResultFn
+      ? await options.mapAsyncResultFn(result, {
+        isAsyncMiddleware: isAsync,
+        isLastMiddleware: options.isLastMiddleware,
+        req,
+      })
+      : result;
+
+      if (!isAsync) {
         // This middleware has `res` so we it will take care of the response
         return;
       }
 
-      if (typeof options === 'undefined' || req.method === 'USE') {
+      if (!options.isLastMiddleware || req.method === 'USE') {
         // `USE` middlewares never return stuff, so there is no need for us to
         // attempt to process the result. `options` is only passed to the last
         //  middleware, if this is not the last middleware, continue with next
@@ -107,32 +121,38 @@ const mapMiddleware = <TEntities extends Entities>(
   return fn;
 };
 
-export default <TEntities extends Entities, TSchema>(
-  { errorHandler, compileSchema }: AsyncOptions<TEntities, TSchema> = {},
-): Converter<TEntities, TSchema> => (args, context) => {
-  const statusCode = args.find(isNumber) || DEFAULT_STATUS_CODE;
+export default <TEntities extends Entities, TSchema>({
+    errorHandler,
+    compileSchema,
+    mapAsyncResultFn,
+  }: AsyncOptions<TEntities, TSchema> = {}): Converter<TEntities, TSchema> =>
+  (args, context) => {
+    const statusCode = args.find(isNumber) || DEFAULT_STATUS_CODE;
 
-  const schema = args
-    .filter(isSchema<TSchema>())
-    .find(s => s.$scope === 'response');
-  const validateSchema = compileSchema
-    && schema
-    && compileSchema(schema, context);
+    const schema = args
+      .filter(isSchema<TSchema>())
+      .find(s => s.$scope === 'response');
+    const validateSchema =
+      compileSchema && schema && compileSchema(schema, context);
 
-  const middlewares = args.filter(isMiddleware);
-  const lastMiddleware = middlewares[middlewares.length - 1];
+    const middlewares = args.filter(isMiddleware);
+    const lastMiddleware = middlewares[middlewares.length - 1];
 
-  // 4 argument middlewares are error handlers, and we leave them untouched
-  return args.map(m => isMiddleware(m) && m.length < 4
-      ? mapMiddleware(
+    // 4 argument middlewares are error handlers, and we leave them untouched
+    return args.map(m =>
+      isMiddleware(m) && m.length < 4
+        ? mapMiddleware(
           m,
           // Check if this is the last valid middleware (not the statusCode arg)
-          m === lastMiddleware
-            ? { statusCode, validateSchema }
-            : undefined,
+          {
+            isLastMiddleware: m === lastMiddleware,
+            mapAsyncResultFn,
+            statusCode,
+            validateSchema,
+          },
           // Passes a custom error handler
           errorHandler,
         )
-      : m,
-  );
-};
+        : m,
+    );
+  };

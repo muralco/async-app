@@ -112,6 +112,19 @@ app.get(
   (req: Req<'todo'>) => req.todo,
 );
 
+app.get('/echo1', () => 'echo');
+
+app.get('/echo2', () => 'echo', () => ({ last: true }));
+
+app.get('/echo3', (_, res) => {
+  setTimeout(() => {
+    if (!res.headersSent) {
+      res.send({ last: true });
+    }
+  },         0);
+  return 'echo';
+});
+
 // --- Docs ----------------------------------------------------------- //
 app.use(
   '/docs',

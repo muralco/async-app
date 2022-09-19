@@ -13,7 +13,10 @@ import { parseSchema, Type } from 'mural-schema';
 import { ToDo, User } from './db';
 
 // In your case this is `from 'async-app'`
-import createApp, { Entities, Req as Request } from '../..';
+import createApp, {
+  Entities,
+  internalServerError,
+  Req as Request } from '../..';
 import { ErrorHandlerFn } from '../../types';
 
 // This type represents all the custom `req` keys that we could have, in this
@@ -42,4 +45,19 @@ export default (errorHandlerFn?: ErrorHandlerFn<ExampleEntities>) =>
     // different `compileSchemaFn`.
     compileSchemaFn: schema => parseSchema(schema),
     errorHandlerFn,
+    mapAsyncResultFn: async (value, { req, ...opts }) => {
+      if (value !== 'echo') return value;
+
+      if (req.query.throw) {
+        if (!opts.isLastMiddleware) throw internalServerError('NOT_LAST');
+
+        if (!opts.isAsyncMiddleware) throw internalServerError('NOT_ASYNC');
+      }
+
+      return {
+        ...opts,
+        method: req.method,
+        path: req.path,
+      };
+    },
   });

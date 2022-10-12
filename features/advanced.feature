@@ -95,6 +95,22 @@ Scenario: mapAsyncResultFn
   When GET /echo3?throw=true
   Then the response is 500 and the payload at error is "NOT_ASYNC"
 
+Scenario: CustomResponse isRaw = true, no headers
+  When GET /custom-response-raw
+  Then the response is 200 and the raw payload is "test"
+
+Scenario: CustomResponse isRaw = false, with headers
+  When GET /custom-response-headers
+  Then the response is 200 and the raw payload is "\"test\""
+  And the response headers at header1 is "header-value"
+  And the response headers at header2 is "header-value2, header-value3"
+
+Scenario: NOT CustomResponse with headers prop, should not add headers
+  When GET /response-headers
+  Then the response is 200
+  And the response headers at header1 is undefined
+  And the response headers at header2 is undefined
+
 # Edges
 
 Scenario: create a user without username

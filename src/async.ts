@@ -1,3 +1,4 @@
+import { CustomResponse } from './custom-response';
 import { CustomError } from './error';
 import {
   CommonMiddleware,
@@ -62,13 +63,23 @@ const mapMiddleware = <TEntities extends Entities>(
 
       const isAsync = isAsyncMiddleware(middleware);
 
-      const val = options.mapAsyncResultFn
+      const mappedVal = options.mapAsyncResultFn
       ? await options.mapAsyncResultFn(result, {
         isAsyncMiddleware: isAsync,
         isLastMiddleware: options.isLastMiddleware,
         req,
       })
       : result;
+
+      let val = mappedVal;
+      let isRaw = false;
+      let headers: Record<string, string|string[]> | undefined;
+
+      if (mappedVal instanceof CustomResponse) {
+        val = mappedVal.value;
+        isRaw = mappedVal.isRaw;
+        headers = mappedVal.headers;
+      }
 
       if (!isAsync) {
         // This middleware has `res` so we it will take care of the response
@@ -102,7 +113,17 @@ const mapMiddleware = <TEntities extends Entities>(
         }
       }
 
-      res.status(options.statusCode).json(val || {});
+      if (headers) {
+        res.set(headers);
+      }
+
+      res.status(options.statusCode);
+
+      if (isRaw) {
+        res.send(val);
+      } else {
+        res.json(val || {});
+      }
     } catch (err) {
       if (!err || !(err instanceof CustomError)) { return next(err); }
 

@@ -8,6 +8,7 @@ import express from 'express';
 import { join } from 'path';
 
 import { deprecate } from '../..';
+import { createCustomResponse } from '../../custom-response';
 import createApp, { Req } from './async-app';
 import can from './can';
 import { addTodo, addUser, getTodosForUser } from './db';
@@ -124,6 +125,28 @@ app.get('/echo3', (_, res) => {
   },         0);
   return 'echo';
 });
+
+app.get('/custom-response-raw', () =>
+  createCustomResponse('test', { isRaw: true }),
+);
+
+app.get('/custom-response-headers', () =>
+  createCustomResponse('test', {
+    headers: {
+      header1: 'header-value',
+      header2: ['header-value2', 'header-value3'],
+    },
+    isRaw: false,
+  }),
+);
+
+app.get('/response-headers', () => ({
+  headers: {
+    header1: 'header-value',
+    header2: ['header-value2', 'header-value3'],
+  },
+  value: 'test',
+}));
 
 // --- Docs ----------------------------------------------------------- //
 app.use(

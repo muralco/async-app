@@ -1,5 +1,6 @@
 import createApp from './create-app';
 
+export * from './custom-response';
 export * from './decorate';
 export { deprecate } from './deprecate';
 export * from './error';

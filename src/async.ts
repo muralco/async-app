@@ -139,6 +139,11 @@ const mapMiddleware = <TEntities extends Entities>(
 
   copyDecorators(middleware, fn);
 
+  // Set the wrapper function's name to the original function's name. When using
+  // observability tools that record function names, this helps identify the
+  // original function.
+  Object.defineProperty(fn, 'name', { value: middleware.name });
+
   return fn;
 };
 

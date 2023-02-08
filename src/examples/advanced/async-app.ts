@@ -17,7 +17,7 @@ import createApp, {
   Entities,
   internalServerError,
   Req as Request } from '../..';
-import { ErrorHandlerFn } from '../../types';
+import { ErrorHandlerFn, GenerateSchemaErrorFn } from '../../types';
 
 // This type represents all the custom `req` keys that we could have, in this
 // example those are `res.user` and `req.todo`.
@@ -35,6 +35,26 @@ export type Req<T extends keyof ExampleEntities = '_'> = Request<
 
 export { ErrorHandlerFn } from '../..';
 
+// Custom schema validation error function. Conditionally includes a field in
+// the response which contains all the validation errors, based on a request
+// header.
+const generateSchemaErrorFn: GenerateSchemaErrorFn = (
+  errors,
+  source,
+  context,
+) => {
+  const { req } = context;
+  const includeAll = req && !!req.headers['x-include-all-schema-errors'];
+
+  return {
+    all: includeAll ? errors : undefined,
+    error: 'INVALID_PAYLOAD',
+    expected: errors[0].expected,
+    path: errors[0].key,
+    source,
+  };
+};
+
 // This function replaces `express()` as in `const app = express()`;
 export default (errorHandlerFn?: ErrorHandlerFn<ExampleEntities>) =>
   createApp<ExampleEntities, Type>({
@@ -45,6 +65,10 @@ export default (errorHandlerFn?: ErrorHandlerFn<ExampleEntities>) =>
     // different `compileSchemaFn`.
     compileSchemaFn: schema => parseSchema(schema),
     errorHandlerFn,
+    // The following line registers a function that maps schema validation
+    // errors to an error response payload. When not specified, async-app uses a
+    // built-in schema validation error function.
+    generateSchemaErrorFn,
     mapAsyncResultFn: async (value, { req, ...opts }) => {
       if (value !== 'echo') return value;
 

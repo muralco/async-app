@@ -7,6 +7,10 @@ export interface Context {
   path?: string;
 }
 
+export interface ErrorContext extends Context {
+  req: Request;
+}
+
 export interface Entities {
   _: unknown;
 }
@@ -91,6 +95,7 @@ export type CompileSchema<T> = (
 export type GenerateSchemaErrorFn = (
   errors: ValidationError[],
   source: string,
+  context: ErrorContext,
 ) => any;
 
 export type ErrorHandlerFn<TEntities extends Entities> = (

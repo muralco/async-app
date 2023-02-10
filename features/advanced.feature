@@ -133,6 +133,26 @@ Scenario: create a user without name
     }
     """
 
+Scenario: custom schema validation error function
+  Given the request header x-include-all-schema-errors is "1"
+  When POST /users
+  Then the response is 400 and the payload includes
+    """
+    {
+      "all": [
+        {
+          "expected": "string",
+          "key": ["name"]
+        },
+        {
+          "expected": "string",
+          "key": ["username"]
+        }
+      ],
+      "error": "INVALID_PAYLOAD"
+    }
+    """
+
 Scenario: get invalid user
   When GET /users/invalid
   Then the response is 404 and the payload at error is "USER"

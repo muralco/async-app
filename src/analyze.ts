@@ -24,6 +24,38 @@ const getPermissions = (middlewares: Arg[]) =>
     .filter(m => !!m.$permission)
     .map(m => m.$permission);
 
+/**
+ * Get information about where the endpoint is defined in the source code.
+ */
+const getEndpointSource = () => {
+  const stack = new Error().stack;
+  if (!stack) {
+    return;
+  }
+
+  // Select the stack frame where the endpoint is defined.
+  // Assume V8 stack trace format (https://v8.dev/docs/stack-trace-api):
+  // [0]: Error description
+  // [1]: This function call
+  // [2]: MetadataApp.[method]() call
+  // [3]: The target frame
+  const frame = stack.split('\n')[3];
+
+  // Match the filename and line number from a string formatted like:
+  //
+  //     at fn (/path/to/endpoints.js:72:11)
+  //
+  const result = frame.match(/^.*\((.+):(\d+):\d+\)$/);
+  if (!result) {
+    return;
+  }
+
+  const filename = result[1];
+  const lineNumber = Number(result[2]);
+
+  return { filename, lineNumber };
+};
+
 const isString = (a: Arg): a is string => typeof a === 'string';
 const isNumber = (a: Arg): a is number => typeof a === 'number';
 
@@ -35,6 +67,10 @@ export interface Route<TSchema> {
   permissions: string[];
   schema?: TSchema;
   responseSchema?: TSchema;
+  source?: {
+    filename: string;
+    lineNumber: number;
+  };
   successStatus: number;
   summary: string;
 }
@@ -76,6 +112,7 @@ class MetadataApp<TSchema> {
       const middlewares = other.filter(isMiddleware);
       const deprecated = middlewares.find(m => !!m.$deprecated);
       const permissions = this.permissions.concat(getPermissions(middlewares));
+      const source = getEndpointSource();
 
       this.routes.push({
         deprecated: deprecated && deprecated.$deprecated,
@@ -87,6 +124,7 @@ class MetadataApp<TSchema> {
         schema: (this.schema || schema)
           ? Object.assign({}, this.schema, schema)
           : undefined,
+        source,
         successStatus,
         summary,
       });

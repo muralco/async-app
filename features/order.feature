@@ -31,3 +31,8 @@ Scenario: reorder (loader with requires, permission does not require complex loa
 Scenario: reorder (complex permission)
   When ordering ["can(a,b)", "load(b)", "load(a)"]
   Then the ordered middlewares are ["load(a)", "load(b)", "can(a,b)"]
+
+Scenario: a spec should not be part of the middlewares
+  Given a spec "sp" with value { "operatorId": "getData" } 
+  When ordering ["load(b)", "can(b)", "load(a)", "sp"]
+  Then the ordered middlewares are ["load(b)", "can(b)", "load(a)"]

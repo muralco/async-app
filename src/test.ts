@@ -65,6 +65,13 @@ const setup: SetupFn = ({ compare, getCtx, Given, setCtx, Then, When }) => {
     (op, expected) => compare(op, DB, expected),
     { inline: true },
   );
+  // === Specs ============================================================== //
+  Given(
+    'a spec "{word}" with value (.*)',
+    (name, specs) => addMiddleware(name, {
+      $specs: JSON.parse(specs),
+    }),
+  );
 };
 
 pickledCucumber(setup, {

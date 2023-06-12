@@ -132,7 +132,7 @@ export default <TEntities extends Entities, TSchema>() => (
   // should not be ordered.
   const orderedMiddlewares: Middleware<TEntities>[] = [...noOrder];
   const addMiddleware = (m: Middleware<TEntities>) => {
-    if (!orderedMiddlewares.includes(m)) {
+    if (!m.$specs && !orderedMiddlewares.includes(m)) {
       orderedMiddlewares.push(m);
     }
   };

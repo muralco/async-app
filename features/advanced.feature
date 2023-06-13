@@ -111,6 +111,10 @@ Scenario: NOT CustomResponse with headers prop, should not add headers
   And the response headers at header1 is undefined
   And the response headers at header2 is undefined
 
+Scenario: assign specs decorator
+  When GET /specs
+  Then the response is 200 and the payload is { "value": "test" }
+
 # Edges
 
 Scenario: create a user without username

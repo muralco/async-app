@@ -7,7 +7,7 @@ import bodyParser from 'body-parser';
 import express from 'express';
 import { join } from 'path';
 
-import { deprecate } from '../..';
+import { badRequest, deprecate, specs } from '../..';
 import { createCustomResponse } from '../../custom-response';
 import createApp, { Req } from './async-app';
 import can from './can';
@@ -147,6 +147,18 @@ app.get('/response-headers', () => ({
   },
   value: 'test',
 }));
+
+// The specs decorator set a value for future purpose like OpenAPI
+// specs generation.
+app.get(
+  '/specs',
+  'Test specs decorator',
+  specs({ operatorId: 'getData' }, (_: Req) => {
+    // This middleware should not run when calling the endpoint.
+    throw badRequest('WRONG_EXEC');
+  }),
+  (_: Req) => ({ value: 'test' }),
+);
 
 // --- Docs ----------------------------------------------------------- //
 app.use(

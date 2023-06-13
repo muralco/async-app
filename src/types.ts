@@ -25,6 +25,7 @@ export type Decorator = {
   $permission?: string;
   $noOrder?: boolean;
   $deprecated?: 'in-use' | 'redirect' | 'rewrite';
+  $specs?: object;
 };
 
 export type CommonMiddleware<TEntities extends Entities> = (

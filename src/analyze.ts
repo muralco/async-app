@@ -33,6 +33,7 @@ export interface Route<TSchema> {
   path: string;
   permissions: string[];
   schema?: TSchema;
+  specs?: object;
   successStatus: number;
   summary: string;
 }
@@ -71,6 +72,7 @@ class MetadataApp<TSchema> {
       const middlewares = other.filter(isMiddleware);
       const deprecated = middlewares.find(m => !!m.$deprecated);
       const permissions = this.permissions.concat(getPermissions(middlewares));
+      const specs = middlewares.find(m => !!m.$specs);
 
       this.routes.push({
         deprecated: deprecated && deprecated.$deprecated,
@@ -81,6 +83,7 @@ class MetadataApp<TSchema> {
         schema: (this.schema || schema)
           ? Object.assign({}, this.schema, schema)
           : undefined,
+        specs: specs && specs.$specs,
         successStatus,
         summary,
       });

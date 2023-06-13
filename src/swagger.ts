@@ -1,10 +1,13 @@
 import {
   flattenDeep,
   groupBy,
+  isPlainObject,
   partition,
   uniq,
 } from 'lodash';
 import { Route } from './analyze';
+import { METHOD_SOURCE_MAP } from './schema';
+import { Schema } from './types';
 
 interface RouteWithCat<TSchema> extends Route<TSchema> {
   category: string;
@@ -36,7 +39,11 @@ const defaultGeneratePermissions = (permissions: string[]) => {
   `;
 };
 
-const wrapSchema = (schema: any) =>
+const isQuerySchema = (schema: any, method: string) =>
+  schema &&
+  ((schema as Schema).$scope || METHOD_SOURCE_MAP[method]) === 'query';
+
+const wrapBodySchema = (schema: any) =>
   schema
     ? [{
       in: 'body',
@@ -44,6 +51,17 @@ const wrapSchema = (schema: any) =>
       required: true,
       schema,
     }]
+    : undefined;
+
+const wrapQuerySchema = (schema: any) =>
+  (isPlainObject(schema) && schema.properties)
+    ? Object.entries<Record<string, any>>(schema.properties)
+        .map(([key, value]) => ({
+          in: 'query',
+          name: key,
+          type: value.enum ? 'string' : value.type,
+          ...(value.enum ? { enum: value.enum } : undefined),
+        }))
     : undefined;
 
 const generateEndpoint = <TSchema>(
@@ -61,6 +79,7 @@ const generateEndpoint = <TSchema>(
     permissions,
     summary,
     schema,
+    responseSchema,
     successStatus,
   }: RouteWithCat<TSchema>,
 ) => ({
@@ -74,10 +93,16 @@ const generateEndpoint = <TSchema>(
   parameters:
     schema
     && generateSchema
-    && wrapSchema(generateSchema(schema)),
+    && (isQuerySchema(schema, method) ? wrapQuerySchema : wrapBodySchema)(
+      generateSchema(schema),
+    ),
   produces: ['application/json'],
   responses: {
-    [successStatus]: { description: 'Success' },
+    [successStatus]: {
+      description: 'Success',
+      schema:
+        responseSchema && generateSchema && generateSchema(responseSchema),
+    },
   //   400: { description: 'Invalid payload' },
   },
   summary: expandTemplates(getParamAlias, summary),

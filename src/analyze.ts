@@ -8,6 +8,7 @@ import {
   isPermissionMiddleware,
   isSchema,
   Method,
+  Schema,
 } from './types';
 
 const Module = require('module');
@@ -33,6 +34,7 @@ export interface Route<TSchema> {
   path: string;
   permissions: string[];
   schema?: TSchema;
+  responseSchema?: TSchema;
   successStatus: number;
   summary: string;
 }
@@ -50,6 +52,7 @@ class MetadataApp<TSchema> {
   response = { end: noop };
   routes: Route<TSchema>[] = [];
   schema: any = undefined;
+  responseSchema: TSchema | undefined = undefined;
   set = noop;
   use: (...args: Arg[]) => void;
 
@@ -66,7 +69,9 @@ class MetadataApp<TSchema> {
     return (path: string|RegExp, ...args: Arg[]) => {
       const [summary, description = ''] = args.filter(isString);
       const other = flattenDeep(args).filter(a => !!a);
-      const schema = other.find(isSchema());
+      const schemas = other.filter(isSchema()) as Schema<TSchema>[];
+      const schema = schemas.find(s => s.$scope !== 'response');
+      const responseSchema = schemas.find(s => s.$scope === 'response');
       const successStatus = other.find(isNumber) || 200;
       const middlewares = other.filter(isMiddleware);
       const deprecated = middlewares.find(m => !!m.$deprecated);
@@ -78,6 +83,7 @@ class MetadataApp<TSchema> {
         method,
         path: path.toString(),
         permissions,
+        responseSchema,
         schema: (this.schema || schema)
           ? Object.assign({}, this.schema, schema)
           : undefined,

@@ -1,14 +1,16 @@
 {
   "name": "async-app",
-  "version": "4.6.0",
+  "version": "4.6.1",
   "description": "An express wrapper for handling async middlewares, order middlewares, schema validator, and other stuff",
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
+    "./analyze": "./dist/analyze.js",
+    "./error": "./dist/error.js",
     "./swagger": "./dist/swagger.js",
-    "./analyze": "./dist/analyze.js"
+    "./types": "./dist/types.js"
   },
   "repository": {
     "type": "git",

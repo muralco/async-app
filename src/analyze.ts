@@ -8,6 +8,7 @@ import {
   isPermissionMiddleware,
   isSchema,
   Method,
+  Schema,
 } from './types';
 
 const Module = require('module');
@@ -23,6 +24,38 @@ const getPermissions = (middlewares: Arg[]) =>
     .filter(m => !!m.$permission)
     .map(m => m.$permission);
 
+/**
+ * Get information about where the endpoint is defined in the source code.
+ */
+const getEndpointSource = () => {
+  const stack = new Error().stack;
+  if (!stack) {
+    return;
+  }
+
+  // Select the stack frame where the endpoint is defined.
+  // Assume V8 stack trace format (https://v8.dev/docs/stack-trace-api):
+  // [0]: Error description
+  // [1]: This function call
+  // [2]: MetadataApp.[method]() call
+  // [3]: The target frame
+  const frame = stack.split('\n')[3];
+
+  // Match the filename and line number from a string formatted like:
+  //
+  //     at fn (/path/to/endpoints.js:72:11)
+  //
+  const result = frame.match(/^.*\((.+):(\d+):\d+\)$/);
+  if (!result) {
+    return;
+  }
+
+  const filename = result[1];
+  const lineNumber = Number(result[2]);
+
+  return { filename, lineNumber };
+};
+
 const isString = (a: Arg): a is string => typeof a === 'string';
 const isNumber = (a: Arg): a is number => typeof a === 'number';
 
@@ -33,6 +66,11 @@ export interface Route<TSchema> {
   path: string;
   permissions: string[];
   schema?: TSchema;
+  responseSchema?: TSchema;
+  source?: {
+    filename: string;
+    lineNumber: number;
+  };
   successStatus: number;
   summary: string;
 }
@@ -50,6 +88,7 @@ class MetadataApp<TSchema> {
   response = { end: noop };
   routes: Route<TSchema>[] = [];
   schema: any = undefined;
+  responseSchema: TSchema | undefined = undefined;
   set = noop;
   use: (...args: Arg[]) => void;
 
@@ -66,11 +105,14 @@ class MetadataApp<TSchema> {
     return (path: string|RegExp, ...args: Arg[]) => {
       const [summary, description = ''] = args.filter(isString);
       const other = flattenDeep(args).filter(a => !!a);
-      const schema = other.find(isSchema());
+      const schemas = other.filter(isSchema()) as Schema<TSchema>[];
+      const schema = schemas.find(s => s.$scope !== 'response');
+      const responseSchema = schemas.find(s => s.$scope === 'response');
       const successStatus = other.find(isNumber) || 200;
       const middlewares = other.filter(isMiddleware);
       const deprecated = middlewares.find(m => !!m.$deprecated);
       const permissions = this.permissions.concat(getPermissions(middlewares));
+      const source = getEndpointSource();
 
       this.routes.push({
         deprecated: deprecated && deprecated.$deprecated,
@@ -78,9 +120,11 @@ class MetadataApp<TSchema> {
         method,
         path: path.toString(),
         permissions,
+        responseSchema,
         schema: (this.schema || schema)
           ? Object.assign({}, this.schema, schema)
           : undefined,
+        source,
         successStatus,
         summary,
       });

@@ -11,7 +11,7 @@ import {
   ValidateSchema,
 } from './types';
 
-const METHOD_SOURCE_MAP: { [key: string]: Scope } = {
+export const METHOD_SOURCE_MAP: { [key: string]: Scope } = {
   delete: 'query',
   get: 'query',
   patch: 'body',

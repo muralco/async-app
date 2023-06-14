@@ -51,6 +51,10 @@ app.post(
     name: 'string',
     username: 'string',
   },
+  { // This is the expected schema of the response (optional)
+    $scope: 'response',
+    username: 'string',
+  },
   async (req: Req) => {
     const user = req.body;
     await addUser(user);
@@ -115,7 +119,13 @@ app.get(
 
 app.get('/echo1', () => 'echo');
 
-app.get('/echo2', () => 'echo', () => ({ last: true }));
+app.get(
+  '/echo2',
+  // The expected schema of the query parameters
+  { 'throw?': '"true"|"false"' },
+  () => 'echo',
+  () => ({ last: true }),
+);
 
 app.get('/echo3', (_, res) => {
   setTimeout(() => {

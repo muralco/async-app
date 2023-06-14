@@ -1,9 +1,15 @@
 {
   "name": "async-app",
-  "version": "4.5.1",
+  "version": "4.6.0",
   "description": "An express wrapper for handling async middlewares, order middlewares, schema validator, and other stuff",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./swagger": "./dist/swagger.js",
+    "./analyze": "./dist/analyze.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/muralco/async-app.git"
@@ -46,6 +52,7 @@
     "lint": "tslint -p .",
     "pack": "npm run dist && cd dist && npm pack",
     "test": "cucumber-js --require-module ts-node/register --exit -r src/test.ts",
-    "watch": "tsc -w"
+    "watch": "tsc -w",
+    "prepare": "tsc"
   }
 }

@@ -1,1 +1,20 @@
-src
+# hidden files
+.*
+
+# source files
+src/
+
+# tests and samples
+dist/examples/
+dist/test.*
+features/
+
+# build scripts
+scripts/
+
+# dev files
+./tslint.json
+./index.js
+
+# packed tarballs
+./*.tgz

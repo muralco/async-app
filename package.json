@@ -1,14 +1,16 @@
 {
   "name": "async-app",
-  "version": "4.6.0",
+  "version": "4.6.1",
   "description": "An express wrapper for handling async middlewares, order middlewares, schema validator, and other stuff",
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
+    "./analyze": "./dist/analyze.js",
+    "./error": "./dist/error.js",
     "./swagger": "./dist/swagger.js",
-    "./analyze": "./dist/analyze.js"
+    "./types": "./dist/types.js"
   },
   "repository": {
     "type": "git",
@@ -48,11 +50,12 @@
   },
   "scripts": {
     "build": "npm run lint && tsc",
-    "dist": "rm -rf dist && npm run build && npm run test && cp package*.json README.md LICENSE dist && rm -rf ./dist/test.* ./dist/examples",
+    "dist": "rm -rf dist && tsc",
     "lint": "tslint -p .",
-    "pack": "npm run dist && cd dist && npm pack",
+    "prepublishOnly": "npm run lint",
+    "prepack": "npm run test",
     "test": "cucumber-js --require-module ts-node/register --exit -r src/test.ts",
     "watch": "tsc -w",
-    "prepare": "tsc"
+    "prepare": "npm run dist"
   }
 }

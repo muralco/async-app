@@ -24,16 +24,12 @@ jobs:
         run: |
           npm ci
 
-      - name: Build and test 
-        run: |
-          npm run dist
+      - run: npm run lint
+      - run: npm run test
 
       - name: Publish 
         if: ${{github.ref == 'refs/heads/master'}}
-        working-directory: dist
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           npm publish
-
-

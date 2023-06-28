@@ -95,6 +95,15 @@ app.post(
 app.get(
   '/todos/:username',
   'Returns the TODOs for the specified user',
+  {
+    $schema: [{
+      id: 'number',
+      item: 'string',
+      owner: 'string',
+      readOnly: 'boolean',
+    }],
+    $scope: 'response',
+  },
   load.user.fromParams(),
   (req: Req<'user'>) => getTodosForUser(req.user.username),
 );
@@ -121,8 +130,12 @@ app.get('/echo1', () => 'echo');
 
 app.get(
   '/echo2',
-  // The expected schema of the query parameters
-  { 'throw?': '"true"|"false"' },
+  // The expected schema of the query parameters.
+  // $scope is optional. When unspecified, it's inferred from the method.
+  {
+    $scope: 'query',
+    'throw?': '"true"|"false"',
+  },
   () => 'echo',
   () => ({ last: true }),
 );

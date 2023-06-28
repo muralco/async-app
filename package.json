@@ -1,6 +1,6 @@
 {
   "name": "async-app",
-  "version": "4.6.2",
+  "version": "4.7.0",
   "description": "An express wrapper for handling async middlewares, order middlewares, schema validator, and other stuff",
   "type": "commonjs",
   "main": "dist/index.js",

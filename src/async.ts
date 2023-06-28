@@ -158,8 +158,13 @@ export default <TEntities extends Entities, TSchema>({
     const schema = args
       .filter(isSchema<TSchema>())
       .find(s => s.$scope === 'response');
+    const rawSchema = schema
+      ? schema.$schema
+        ? schema.$schema
+        : schema
+      : undefined;
     const validateSchema =
-      compileSchema && schema && compileSchema(schema, context);
+      compileSchema && rawSchema && compileSchema(rawSchema, context);
 
     const middlewares = args.filter(isMiddleware);
     const lastMiddleware = middlewares[middlewares.length - 1];

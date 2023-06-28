@@ -95,6 +95,15 @@ app.post(
 app.get(
   '/todos/:username',
   'Returns the TODOs for the specified user',
+  {
+    $schema: [{
+      id: 'number',
+      item: 'string',
+      owner: 'string',
+      readOnly: 'boolean',
+    }],
+    $scope: 'response',
+  },
   load.user.fromParams(),
   (req: Req<'user'>) => getTodosForUser(req.user.username),
 );

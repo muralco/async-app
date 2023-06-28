@@ -88,4 +88,6 @@ export default (errorHandlerFn?: ErrorHandlerFn<ExampleEntities>) =>
         path: req.path,
       };
     },
+    // The following line enables schema validation for responses.
+    validateResponseSchema: true,
   });

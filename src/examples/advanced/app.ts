@@ -121,8 +121,12 @@ app.get('/echo1', () => 'echo');
 
 app.get(
   '/echo2',
-  // The expected schema of the query parameters
-  { 'throw?': '"true"|"false"' },
+  // The expected schema of the query parameters.
+  // $scope is optional. When unspecified, it's inferred from the method.
+  {
+    $scope: 'query',
+    'throw?': '"true"|"false"',
+  },
   () => 'echo',
   () => ({ last: true }),
 );

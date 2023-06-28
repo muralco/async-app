@@ -9,6 +9,7 @@
 // | help us in specifing middlewares later.                                | //
 // +========================================================================+ //
 
+import { omit } from 'lodash';
 import { parseSchema, Type } from 'mural-schema';
 import { ToDo, User } from './db';
 
@@ -63,7 +64,10 @@ export default (errorHandlerFn?: ErrorHandlerFn<ExampleEntities>) =>
     // The following line enables schema validation using `mural-schema`. Note
     // that you can easily change your schema validation module by specifing add
     // different `compileSchemaFn`.
-    compileSchemaFn: schema => parseSchema(schema),
+    compileSchemaFn: schema =>
+      parseSchema(
+        schema.$scope !== undefined ? omit(schema, '$scope') : schema,
+      ),
     errorHandlerFn,
     // The following line registers a function that maps schema validation
     // errors to an error response payload. When not specified, async-app uses a

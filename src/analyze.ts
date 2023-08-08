@@ -164,6 +164,19 @@ class ExpressAppStub<TSchema> {
   }
 }
 
+const expressStub = () => new ExpressAppStub();
+Object.assign(expressStub, {
+  // For ESM compatibility
+  default: expressStub,
+  // Define all other express methods
+  json: noop,
+  raw: noop,
+  Router: noop,
+  static: noop,
+  text: noop,
+  urlencoded: noop,
+});
+
 const originalAsyncApp = require('async-app');
 originalAsyncApp.default = () => new ExpressAppStub();
 
@@ -171,12 +184,7 @@ originalAsyncApp.default = () => new ExpressAppStub();
 const originalRequire = Module.prototype.require;
 Module.prototype.require = function require(path: string) {
   if (path === 'express') {
-    const ctor = () => new ExpressAppStub();
-    Object.assign(ctor, {
-      default: ctor,
-      static: noop,
-    });
-    return ctor;
+    return expressStub;
   }
   return originalRequire.apply(this, arguments); // tslint:disable-line
 };

@@ -37,7 +37,7 @@ const getEndpointSource = () => {
   // Assume V8 stack trace format (https://v8.dev/docs/stack-trace-api):
   // [0]: Error description
   // [1]: This function call
-  // [2]: MetadataApp.[method]() call
+  // [2]: ExpressAppStub.[method]() call
   // [3]: The target frame
   const frame = stack.split('\n')[3];
 
@@ -75,7 +75,7 @@ export interface Route<TSchema> {
   summary: string;
 }
 
-class MetadataApp<TSchema> {
+class ExpressAppStub<TSchema> {
   delete: Endpoint;
   engine = noop;
   get: Endpoint;
@@ -138,9 +138,9 @@ class MetadataApp<TSchema> {
       ? args
       : args.slice(1));
     const docs = middlewares
-      .filter(m => m instanceof MetadataApp) as MetadataApp<TSchema>[];
+      .filter(m => m instanceof ExpressAppStub) as ExpressAppStub<TSchema>[];
     const schemas = middlewares
-      .filter(m => !(m instanceof MetadataApp) && typeof m === 'object');
+      .filter(m => !(m instanceof ExpressAppStub) && typeof m === 'object');
     if (schemas.length) {
       this.schema = Object.assign({}, this.schema, ...schemas);
     }
@@ -165,13 +165,13 @@ class MetadataApp<TSchema> {
 }
 
 const originalAsyncApp = require('async-app');
-originalAsyncApp.default = () => new MetadataApp();
+originalAsyncApp.default = () => new ExpressAppStub();
 
 // Monkeypatch require to return an `App` instead of an express instance.
 const originalRequire = Module.prototype.require;
 Module.prototype.require = function require(path: string) {
   if (path === 'express') {
-    const ctor = () => new MetadataApp();
+    const ctor = () => new ExpressAppStub();
     Object.assign(ctor, {
       default: ctor,
       static: noop,
@@ -184,7 +184,7 @@ Module.prototype.require = function require(path: string) {
 const analyzeApp = <TEntities extends Entities, TSchema>(
   returnYourAppFromThisFn: () => App<TEntities, TSchema>,
 ): Route<TSchema>[] => {
-  const app = returnYourAppFromThisFn() as any as MetadataApp<TSchema>;
+  const app = returnYourAppFromThisFn() as any as ExpressAppStub<TSchema>;
   return app.getRoutes();
 };
 

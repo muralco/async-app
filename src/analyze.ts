@@ -1,4 +1,5 @@
 import { flattenDeep, omit, sortBy } from 'lodash';
+import { resetProvider, setProvider } from './create-app';
 import {
   App,
   ArgumentOption,
@@ -164,28 +165,42 @@ class MetadataApp<TSchema> {
   }
 }
 
-const originalAsyncApp = require('async-app');
-originalAsyncApp.default = () => new MetadataApp();
+// For backward compatibility, we need to monkeypatch the `require` function
+// This should be removed in the next major version release of async-app
+function deprecatedExpressMonkeypatch() {
+  const originalRequire = Module.prototype.require;
+  Module.prototype.require = function require(path: string) {
+    // Monkeypatch require to return an `App` instead of an express instance.
+    if (path === 'express') {
+      const ctor = () => new MetadataApp();
+      Object.assign(ctor, {
+        default: ctor,
+        static: noop,
+      });
+      return ctor;
+    }
 
-// Monkeypatch require to return an `App` instead of an express instance.
-const originalRequire = Module.prototype.require;
-Module.prototype.require = function require(path: string) {
-  if (path === 'express') {
-    const ctor = () => new MetadataApp();
-    Object.assign(ctor, {
-      default: ctor,
-      static: noop,
-    });
-    return ctor;
-  }
-  return originalRequire.apply(this, arguments); // tslint:disable-line
-};
+    // For all the other modules, we just don't patch anything.
+    return originalRequire.apply(this, arguments); // tslint:disable-line
+  };
+}
 
 const analyzeApp = <TEntities extends Entities, TSchema>(
   returnYourAppFromThisFn: () => App<TEntities, TSchema>,
 ): Route<TSchema>[] => {
-  const app = returnYourAppFromThisFn() as any as MetadataApp<TSchema>;
-  return app.getRoutes();
+  try {
+    // TODO: remove this in the future
+    deprecatedExpressMonkeypatch();
+
+    // We setup the stub
+    setProvider(() => new MetadataApp() as unknown as App<TEntities, TSchema>);
+
+    // and then analyze the app by getting it's routes.
+    const app = returnYourAppFromThisFn() as any as MetadataApp<TSchema>;
+    return app.getRoutes();
+  } finally {
+    resetProvider();
+  }
 };
 
 export const analyzeFile = (absolutePathToApp: string) =>

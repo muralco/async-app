@@ -16,6 +16,10 @@ import {
   RequestHandler,
 } from './types';
 
+type AppProvider<TEntities extends Entities = Entities, TSchema = {}> = (
+  opts?: Opts<TEntities, TSchema>,
+) => App<TEntities, TSchema>;
+
 const isPath = (arg: unknown) => (typeof arg === 'string' || isRegExp(arg));
 
 const patchMethod = <
@@ -67,7 +71,10 @@ const METHODS: Method[] = [
   'use',
 ];
 
-export const createApp = <TEntities extends Entities = Entities, TSchema = {}>(
+const asyncAppProvider: AppProvider = <
+  TEntities extends Entities = Entities,
+  TSchema = {}
+>(
   opts?: Opts<TEntities, TSchema>,
 ): App<TEntities, TSchema> => {
   const app = express() as App<TEntities, TSchema>;
@@ -103,5 +110,16 @@ export const createApp = <TEntities extends Entities = Entities, TSchema = {}>(
 
   return app;
 };
+
+let appProvider: AppProvider<any, any> = asyncAppProvider;
+
+export const resetProvider = () => (appProvider = asyncAppProvider);
+
+export const setProvider = (provider: AppProvider<any, any>) =>
+  (appProvider = provider);
+
+export const createApp = <TEntities extends Entities = Entities, TSchema = {}>(
+  opts?: Opts<TEntities, TSchema>,
+) => appProvider(opts);
 
 export default createApp;

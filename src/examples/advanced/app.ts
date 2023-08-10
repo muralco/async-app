@@ -13,7 +13,7 @@ import createApp, { Req } from './async-app';
 import can from './can';
 import { addTodo, addUser, getTodosForUser } from './db';
 import load from './load';
-import purgeUser from './purgeUser';
+import purgeUser from './purge-user';
 
 const app = createApp();
 app.use(bodyParser.json());

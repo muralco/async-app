@@ -3,8 +3,6 @@ import { Type } from 'mural-schema';
 import toJsonSchema from 'mural-schema/to-jsonschema';
 import { join } from 'path';
 
-import './mock-require';
-
 import analyze, { removeScope } from '../../analyze';
 import toSwagger from '../../swagger';
 import { port } from '../common';

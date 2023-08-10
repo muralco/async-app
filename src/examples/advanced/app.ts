@@ -7,8 +7,7 @@ import bodyParser from 'body-parser';
 import express from 'express';
 import { join } from 'path';
 
-import { deprecate } from '../..';
-import { createCustomResponse } from '../../custom-response';
+import { createCustomResponse, deprecate } from '../..';
 import createApp, { Req } from './async-app';
 import can from './can';
 import { addTodo, addUser, getTodosForUser } from './db';

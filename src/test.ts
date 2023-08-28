@@ -13,6 +13,12 @@ interface MidMap {
   [name: string]: Mid;
 }
 
+function clearRequireCache() {
+  Object.keys(require.cache).forEach((key) => {
+    delete require.cache[key];
+  });
+}
+
 const setup: SetupFn = ({ compare, getCtx, Given, setCtx, Then, When }) => {
   // === Order ============================================================== //
   const addMiddleware = (name: string, attrs: Decorator) => {
@@ -38,6 +44,10 @@ const setup: SetupFn = ({ compare, getCtx, Given, setCtx, Then, When }) => {
       $requires: JSON.parse(deps),
     }),
   );
+  Given(
+    'an? (basic|advanced) app',
+    app => setCtx('$app', app),
+  );
   When(
     'ordering (.*)',
     (mids) => {
@@ -51,6 +61,18 @@ const setup: SetupFn = ({ compare, getCtx, Given, setCtx, Then, When }) => {
       setCtx('$sorted', sorted.map(m => (m as Mid).$name || ''));
     },
   );
+  When('analyzing the current app', () => {
+    // We need to do this so all the imported apps are reimported with the
+    // correct instrumentation for the analyze function.
+    clearRequireCache();
+    const analyze = require('./analyze').default;
+    const routes = analyze(
+      getCtx('$app') === 'advanced'
+        ? () => require('./examples/advanced/app').default
+        : () => require('./examples/basic/app').default,
+    );
+    setCtx('$routes', routes);
+  });
   Then(
     'the order of the middlewares remains unchanged',
     () => deepEqual(getCtx('$sorted'), getCtx('$original')),
@@ -58,6 +80,13 @@ const setup: SetupFn = ({ compare, getCtx, Given, setCtx, Then, When }) => {
   Then(
     'the ordered middlewares are (.*)',
     expected => deepEqual(getCtx('$sorted'), JSON.parse(expected)),
+  );
+  Then(
+    'the analyzed routes {op}',
+    (op, expected) => {
+      compare(op, getCtx('$routes'), expected);
+    },
+    { inline: true },
   );
   // === Advanced example =================================================== //
   Then(

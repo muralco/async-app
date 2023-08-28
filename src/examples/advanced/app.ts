@@ -176,4 +176,6 @@ app.use(
   express.static(join(__dirname, '../../../src/examples/advanced/docs')),
 );
 
+app.disable('x-powered-by');
+
 export default app;

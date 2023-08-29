@@ -90,6 +90,7 @@ class MetadataApp<TSchema> {
   schema: any = undefined;
   responseSchema: TSchema | undefined = undefined;
   set = noop;
+  disable = noop;
   use: (...args: Arg[]) => void;
 
   constructor() {

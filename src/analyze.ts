@@ -77,21 +77,34 @@ export interface Route<TSchema> {
 }
 
 class MetadataApp<TSchema> {
+  // express methods
+  all = noop; // All method is not supported in this stub
   delete: Endpoint;
+  disable = noop;
+  disabled = noop;
+  enable = noop;
+  enabled = noop;
   engine = noop;
   get: Endpoint;
+  listen = noop;
+  METHOD = noop;
   options = noop;
   param = noop;
   patch: Endpoint;
-  permissions: string[] = [];
+  path = noop;
   post: Endpoint;
   put: Endpoint;
-  response = { end: noop };
-  routes: Route<TSchema>[] = [];
-  schema: any = undefined;
-  responseSchema: TSchema | undefined = undefined;
+  render = noop;
+  route = noop;
   set = noop;
   use: (...args: Arg[]) => void;
+
+  // non-express methods
+  permissions: string[] = [];
+  response = { end: noop };
+  responseSchema: TSchema | undefined = undefined;
+  routes: Route<TSchema>[] = [];
+  schema: any = undefined;
 
   constructor() {
     this.delete = this.generateRoute('delete');

@@ -186,7 +186,7 @@ function deprecatedExpressMonkeypatch() {
 }
 
 const analyzeApp = <TEntities extends Entities, TSchema>(
-  returnYourAppFromThisFn: () => App<TEntities, TSchema>,
+  getApp: () => App<TEntities, TSchema>,
 ): Route<TSchema>[] => {
   try {
     // TODO: remove this in the future
@@ -196,7 +196,7 @@ const analyzeApp = <TEntities extends Entities, TSchema>(
     setProvider(() => new MetadataApp() as unknown as App<TEntities, TSchema>);
 
     // and then analyze the app by getting it's routes.
-    const app = returnYourAppFromThisFn() as any as MetadataApp<TSchema>;
+    const app = getApp() as any as MetadataApp<TSchema>;
     return app.getRoutes();
   } finally {
     resetProvider();

@@ -1,4 +1,5 @@
 import { flattenDeep, omit, sortBy } from 'lodash';
+import { resetProvider, setProvider } from './create-app';
 import {
   App,
   ArgumentOption,
@@ -76,21 +77,34 @@ export interface Route<TSchema> {
 }
 
 class MetadataApp<TSchema> {
+  // express methods
+  all = noop; // All method is not supported in this stub
   delete: Endpoint;
+  disable = noop;
+  disabled = noop;
+  enable = noop;
+  enabled = noop;
   engine = noop;
   get: Endpoint;
+  listen = noop;
+  METHOD = noop;
   options = noop;
   param = noop;
   patch: Endpoint;
-  permissions: string[] = [];
+  path = noop;
   post: Endpoint;
   put: Endpoint;
-  response = { end: noop };
-  routes: Route<TSchema>[] = [];
-  schema: any = undefined;
-  responseSchema: TSchema | undefined = undefined;
+  render = noop;
+  route = noop;
   set = noop;
   use: (...args: Arg[]) => void;
+
+  // non-express methods
+  permissions: string[] = [];
+  response = { end: noop };
+  responseSchema: TSchema | undefined = undefined;
+  routes: Route<TSchema>[] = [];
+  schema: any = undefined;
 
   constructor() {
     this.delete = this.generateRoute('delete');
@@ -164,28 +178,42 @@ class MetadataApp<TSchema> {
   }
 }
 
-const originalAsyncApp = require('async-app');
-originalAsyncApp.default = () => new MetadataApp();
+// For backward compatibility, we need to monkeypatch the `require` function
+// This should be removed in the next major version release of async-app
+function deprecatedExpressMonkeypatch() {
+  const originalRequire = Module.prototype.require;
+  Module.prototype.require = function require(path: string) {
+    // Monkeypatch require to return an `App` instead of an express instance.
+    if (path === 'express') {
+      const ctor = () => new MetadataApp();
+      Object.assign(ctor, {
+        default: ctor,
+        static: noop,
+      });
+      return ctor;
+    }
 
-// Monkeypatch require to return an `App` instead of an express instance.
-const originalRequire = Module.prototype.require;
-Module.prototype.require = function require(path: string) {
-  if (path === 'express') {
-    const ctor = () => new MetadataApp();
-    Object.assign(ctor, {
-      default: ctor,
-      static: noop,
-    });
-    return ctor;
-  }
-  return originalRequire.apply(this, arguments); // tslint:disable-line
-};
+    // For all the other modules, we just don't patch anything.
+    return originalRequire.apply(this, arguments); // tslint:disable-line
+  };
+}
 
 const analyzeApp = <TEntities extends Entities, TSchema>(
-  returnYourAppFromThisFn: () => App<TEntities, TSchema>,
+  getApp: () => App<TEntities, TSchema>,
 ): Route<TSchema>[] => {
-  const app = returnYourAppFromThisFn() as any as MetadataApp<TSchema>;
-  return app.getRoutes();
+  try {
+    // TODO: remove this in the future
+    deprecatedExpressMonkeypatch();
+
+    // We setup the stub
+    setProvider(() => new MetadataApp() as unknown as App<TEntities, TSchema>);
+
+    // and then analyze the app by getting it's routes.
+    const app = getApp() as any as MetadataApp<TSchema>;
+    return app.getRoutes();
+  } finally {
+    resetProvider();
+  }
 };
 
 export const analyzeFile = (absolutePathToApp: string) =>

@@ -7,13 +7,12 @@ import bodyParser from 'body-parser';
 import express from 'express';
 import { join } from 'path';
 
-import { deprecate } from '../..';
-import { createCustomResponse } from '../../custom-response';
+import { createCustomResponse, deprecate } from '../..';
 import createApp, { Req } from './async-app';
 import can from './can';
 import { addTodo, addUser, getTodosForUser } from './db';
 import load from './load';
-import purgeUser from './purgeUser';
+import purgeUser from './purge-user';
 
 const app = createApp();
 app.use(bodyParser.json());
@@ -176,5 +175,7 @@ app.use(
   '/docs',
   express.static(join(__dirname, '../../../src/examples/advanced/docs')),
 );
+
+app.disable('x-powered-by');
 
 export default app;

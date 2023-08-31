@@ -120,6 +120,6 @@ export const setProvider = (provider: AppProvider<any, any>) =>
 
 export const createApp = <TEntities extends Entities = Entities, TSchema = {}>(
   opts?: Opts<TEntities, TSchema>,
-) => appProvider(opts);
+): App<TEntities, TSchema> => appProvider(opts);
 
 export default createApp;

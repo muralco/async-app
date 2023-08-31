@@ -113,13 +113,16 @@ const asyncAppProvider: AppProvider = <
 
 let appProvider: AppProvider<any, any> = asyncAppProvider;
 
-export const resetProvider = () => (appProvider = asyncAppProvider);
+export const resetProvider = () => {
+  appProvider = asyncAppProvider;
+};
 
-export const setProvider = (provider: AppProvider<any, any>) =>
-  (appProvider = provider);
+export const setProvider = (provider: AppProvider<any, any>) => {
+  appProvider = provider;
+};
 
 export const createApp = <TEntities extends Entities = Entities, TSchema = {}>(
   opts?: Opts<TEntities, TSchema>,
-) => appProvider(opts);
+): App<TEntities, TSchema> => appProvider(opts);
 
 export default createApp;

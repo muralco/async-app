@@ -1,7 +1,20 @@
 import { Entities, Middleware } from '../types';
 
+// codes should be somewhat obtuse? just an int code we decypher?
+// Thinking we'd actually do something like...
+// 0000 = unknown/other
+// 1XXX = permission
+// 2XXX = entitlement
+// ... additional categories by leading integer as needed
+// Just thinking this could help us bucket things and have discreet codes as necessary?
+export enum ReasonCodes {
+  Other = '0000',
+  Permission = '1000',
+  Entitlement = '2000'
+}
+
 export type PermissionFn<TEntities> =
-  (arg: TEntities) => boolean;
+  (arg: TEntities) => { allowed: boolean, reason: ReasonCodes }
 
 export type PermissionSpec<TEntities> =
   | PermissionFn<TEntities>

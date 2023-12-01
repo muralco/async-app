@@ -6,11 +6,12 @@ import {
   PermissionEntity,
   PermissionFn,
   PermissionMap,
+  ReasonCodes
 } from './types';
 import { getKeys } from './util';
 
 interface Permissions {
-  [name: string]: boolean;
+  [name: string]: { allowed: boolean, reason: ReasonCodes};
 }
 
 const areEqual = <T>(arr1: T[], arr2: T[]) =>
@@ -56,7 +57,7 @@ const tryPermission = <TEntities>(
   try {
     return permissionFn(requiredModels);
   } catch (_) {
-    return false;
+    return ({ allowed: false, reason: ReasonCodes.Other });
   }
 };
 

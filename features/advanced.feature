@@ -207,3 +207,36 @@ Scenario: deprecate.rewrite get todos
   And the response headers at deprecated-for is "GET /todos/${U.username}"
   And the response headers at location contains "/todos/${U.username}"
 
+# Compute permissions
+
+Scenario: get positive TODO permissions
+  Given a user U with { "username": "${random}", "name": "Ringo ${random}" }
+  And a todo T with { "owner": "${U.username}", "item": "Autograph a photo for Marge" }
+  When GET /todo-permissions/${T.id}/${U.username}
+  Then the response is 200 and the payload includes
+    """
+    {
+      "view": true,
+      "admin": true
+    }
+    """
+
+Scenario: get negative TODO permissions with errors
+  Given a user U with { "username": "${random}-1", "name": "Ringo ${random}" }
+  And a user O with { "username": "${random}-2", "name": "John ${random}" }
+  And a todo T with { "owner": "${O.username}", "item": "Autograph a photo for Marge" }
+  When GET /todo-permissions/${T.id}/${U.username}
+  Then the response is 200 and the payload includes
+    """
+    {
+      "view": false,
+      "admin": false,
+      "$errors": {
+        "admin": {
+          "statusCode": 401,
+          "error": "NOT_AUTHORIZED",
+          "extra": {}
+        }
+      }
+    }
+    """

@@ -35,4 +35,4 @@ Scenario: analyze basic app
 Scenario: analyze advanced app succeeds
   Given an advanced app
   When analyzing the current app
-  Then the analyzed routes at length is 17
+  Then the analyzed routes at length is 18

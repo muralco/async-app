@@ -7,9 +7,9 @@ import bodyParser from 'body-parser';
 import express from 'express';
 import { join } from 'path';
 
-import { createCustomResponse, deprecate } from '../..';
+import { computePermissions, createCustomResponse, deprecate } from '../..';
 import createApp, { Req } from './async-app';
-import can from './can';
+import can, { entities } from './can';
 import { addTodo, addUser, getTodosForUser } from './db';
 import load from './load';
 import purgeUser from './purge-user';
@@ -123,6 +123,15 @@ app.get(
   load.user.fromTodo(),
   can.view.todo(),
   (req: Req<'todo'>) => req.todo,
+);
+
+app.get(
+  '/todo-permissions/:todoId/:username',
+  'Returns computed permissions for the specified TODO and user',
+  load.todo.fromParams(),
+  load.user.fromParams(),
+  (req: Req<'todo' | 'user'>) =>
+    computePermissions(entities, 'todo', { todo: req.todo, user: req.user }),
 );
 
 app.get('/echo1', () => 'echo');

@@ -240,3 +240,29 @@ Scenario: get negative TODO permissions with errors
       }
     }
     """
+
+Scenario: mounted apps (nest level 1)
+  Given app setting "trust proxy" is enabled
+  Given the request header X-Forwarded-For is "1.1.1.1"
+  When GET /sub/test
+  Then the response is 200
+  And the response payload includes
+  """
+  {
+    "route": "/sub/test",
+    "ip": "1.1.1.1"
+  }
+  """
+
+Scenario: mounted apps (nest level 2)
+  Given app setting "trust proxy" is enabled
+  Given the request header X-Forwarded-For is "10.0.1.3"
+  When GET /sub/sub/test
+  Then the response is 200
+  And the response payload includes
+  """
+  {
+    "route": "/sub/sub/test",
+    "ip": "10.0.1.3"
+  }
+  """

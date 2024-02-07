@@ -1,6 +1,6 @@
 {
   "name": "async-app",
-  "version": "4.9.0",
+  "version": "4.10.0",
   "description": "An express wrapper for handling async middlewares, order middlewares, schema validator, and other stuff",
   "type": "commonjs",
   "main": "dist/index.js",
@@ -52,7 +52,9 @@
     "build": "tsc",
     "dist": "rm -rf dist && npm run build",
     "lint": "tslint -p .",
+    "lint:fix": "tslint -p . --fix",
     "test": "cucumber-js --require-module ts-node/register --exit -r src/test.ts",
+    "test:debug": "node --inspect-brk=0.0.0.0:9429 --no-lazy ./node_modules/.bin/cucumber-js --require-module ts-node/register --exit -r src/test.ts",
     "watch": "tsc -w",
     "prepack": "npm run test",
     "prepare": "npm run dist"

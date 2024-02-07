@@ -25,7 +25,7 @@ interface AsyncOptions<TEntities extends Entities, TSchema> {
   mapAsyncResultFn?: MapAsyncResultFn<TEntities>;
 }
 
-type Options<TEntities extends Entities> =  {
+type Options<TEntities extends Entities> = {
   statusCode: number;
   isLastMiddleware: boolean;
   validateSchema?: ValidateSchema;
@@ -36,11 +36,11 @@ const copyDecorators = <TSrc extends Decorator, TDest extends Decorator>(
   src: TSrc,
   dest: TDest,
 ) => {
-  const keys = Object
-    .keys(src)
-    .filter(k => k.startsWith('$')) as (keyof Decorator)[];
+  const keys = Object.keys(src).filter(k =>
+    k.startsWith('$'),
+  ) as (keyof Decorator)[];
 
-  keys.forEach(k => dest[k] = src[k]);
+  keys.forEach(k => (dest[k] = src[k]));
 };
 
 const mapMiddleware = <TEntities extends Entities>(
@@ -64,16 +64,16 @@ const mapMiddleware = <TEntities extends Entities>(
       const isAsync = isAsyncMiddleware(middleware);
 
       const mappedVal = options.mapAsyncResultFn
-      ? await options.mapAsyncResultFn(result, {
-        isAsyncMiddleware: isAsync,
-        isLastMiddleware: options.isLastMiddleware,
-        req,
-      })
-      : result;
+        ? await options.mapAsyncResultFn(result, {
+          isAsyncMiddleware: isAsync,
+          isLastMiddleware: options.isLastMiddleware,
+          req,
+        })
+        : result;
 
       let val = mappedVal;
       let isRaw = false;
-      let headers: Record<string, string|string[]> | undefined;
+      let headers: Record<string, string | string[]> | undefined;
 
       if (mappedVal instanceof CustomResponse) {
         val = mappedVal.value;
@@ -125,7 +125,9 @@ const mapMiddleware = <TEntities extends Entities>(
         res.json(val || {});
       }
     } catch (err) {
-      if (!err || !(err instanceof CustomError)) { return next(err); }
+      if (!err || !(err instanceof CustomError)) {
+        return next(err);
+      }
 
       const { statusCode, error, extra } = err;
 
@@ -148,42 +150,48 @@ const mapMiddleware = <TEntities extends Entities>(
 };
 
 export default <TEntities extends Entities, TSchema>({
-    errorHandler,
-    compileSchema,
-    mapAsyncResultFn,
-  }: AsyncOptions<TEntities, TSchema> = {}): Converter<TEntities, TSchema> =>
-  (args, context) => {
-    const statusCode = args.find(isNumber) || DEFAULT_STATUS_CODE;
+  errorHandler,
+  compileSchema,
+  mapAsyncResultFn,
+}: AsyncOptions<TEntities, TSchema> = {}): Converter<TEntities, TSchema> => (
+  args,
+  context,
+) => {
+  if (context.method === 'use') {
+    return args;
+  }
 
-    const schema = args
-      .filter(isSchema<TSchema>())
-      .find(s => s.$scope === 'response');
-    const rawSchema = schema
+  const statusCode = args.find(isNumber) || DEFAULT_STATUS_CODE;
+
+  const schema = args
+    .filter(isSchema<TSchema>())
+    .find(s => s.$scope === 'response');
+  const rawSchema = schema
+    ? schema.$schema
       ? schema.$schema
-        ? schema.$schema
-        : schema
-      : undefined;
-    const validateSchema =
-      compileSchema && rawSchema && compileSchema(rawSchema, context);
+      : schema
+    : undefined;
+  const validateSchema =
+    compileSchema && rawSchema && compileSchema(rawSchema, context);
 
-    const middlewares = args.filter(isMiddleware);
-    const lastMiddleware = middlewares[middlewares.length - 1];
+  const middlewares = args.filter(isMiddleware);
+  const lastMiddleware = middlewares[middlewares.length - 1];
 
-    // 4 argument middlewares are error handlers, and we leave them untouched
-    return args.map(m =>
-      isMiddleware(m) && m.length < 4
-        ? mapMiddleware(
-          m,
-          // Check if this is the last valid middleware (not the statusCode arg)
-          {
-            isLastMiddleware: m === lastMiddleware,
-            mapAsyncResultFn,
-            statusCode,
-            validateSchema,
-          },
-          // Passes a custom error handler
-          errorHandler,
-        )
-        : m,
-    );
-  };
+  // 4 argument middlewares are error handlers, and we leave them untouched
+  return args.map(m =>
+    isMiddleware(m) && m.length < 4
+      ? mapMiddleware(
+        m,
+        // Check if this is the last valid middleware (not the statusCode arg)
+        {
+          isLastMiddleware: m === lastMiddleware,
+          mapAsyncResultFn,
+          statusCode,
+          validateSchema,
+        },
+        // Passes a custom error handler
+        errorHandler,
+      )
+      : m,
+  );
+};

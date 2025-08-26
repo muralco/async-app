@@ -7,14 +7,22 @@ import bodyParser from 'body-parser';
 import express from 'express';
 import { join } from 'path';
 
-import { computePermissions, createCustomResponse, deprecate } from '../..';
-import createApp, { Req } from './async-app';
+import {
+  App,
+  computePermissions,
+  createCustomResponse,
+  deprecate,
+} from '../..';
+import createApp, { ExampleEntities, Req } from './async-app';
 import can, { entities } from './can';
 import { addTodo, addUser, getTodosForUser } from './db';
 import load from './load';
 import purgeUser from './purge-user';
 
 const app = createApp();
+
+app.disable('x-powered-by');
+
 app.use(bodyParser.json());
 
 // --- Deprecated ----------------------------------------------------------- //
@@ -46,11 +54,13 @@ app.get(
 app.post(
   '/users',
   'Creates a user', // This is the summary string for the endpoint
-  { // This is the expected schema of the body
+  {
+    // This is the expected schema of the body
     name: 'string',
     username: 'string',
   },
-  { // This is the expected schema of the response (optional)
+  {
+    // This is the expected schema of the response (optional)
     $scope: 'response',
     username: 'string',
   },
@@ -95,12 +105,14 @@ app.get(
   '/todos/:username',
   'Returns the TODOs for the specified user',
   {
-    $schema: [{
-      id: 'number',
-      item: 'string',
-      owner: 'string',
-      readOnly: 'boolean',
-    }],
+    $schema: [
+      {
+        id: 'number',
+        item: 'string',
+        owner: 'string',
+        readOnly: 'boolean',
+      },
+    ],
     $scope: 'response',
   },
   load.user.fromParams(),
@@ -185,6 +197,20 @@ app.use(
   express.static(join(__dirname, '../../../src/examples/advanced/docs')),
 );
 
-app.disable('x-powered-by');
+// --- Mounted sub app --- //
+const mountSubApp = (app: App<ExampleEntities, {}>) => {
+  const subApp = createApp();
+  app.use('/sub', subApp);
+
+  subApp.get('/test', 'Mounted app route information', (req: Req) => ({
+    ip: req.ip,
+    route: join(req.app.path(), req.path),
+  }));
+
+  return subApp;
+};
+
+const sub = mountSubApp(app);
+mountSubApp(sub);
 
 export default app;

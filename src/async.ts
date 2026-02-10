@@ -12,6 +12,7 @@ import {
   isNumber,
   isPromise,
   isSchema,
+  LogResponseSchemaErrorsFn,
   MapAsyncResultFn,
   Middleware,
   ValidateSchema,
@@ -23,13 +24,19 @@ interface AsyncOptions<TEntities extends Entities, TSchema> {
   compileSchema?: CompileSchema<TSchema>;
   errorHandler?: ErrorHandlerFn<TEntities>;
   mapAsyncResultFn?: MapAsyncResultFn<TEntities>;
+  logResponseSchemaErrorsFn?: LogResponseSchemaErrorsFn;
+  validateResponseSchema?: boolean;
 }
 
 type Options<TEntities extends Entities> =  {
   statusCode: number;
   isLastMiddleware: boolean;
-  validateSchema?: ValidateSchema;
+  validateSchemaFn?: ValidateSchema;
   mapAsyncResultFn?: MapAsyncResultFn<TEntities>;
+  logResponseSchemaErrorsFn?: LogResponseSchemaErrorsFn;
+  // Route pattern, not the actual request path
+  routePath?: string;
+  validateResponseSchema?: boolean;
 };
 
 const copyDecorators = <TSrc extends Decorator, TDest extends Decorator>(
@@ -97,19 +104,32 @@ const mapMiddleware = <TEntities extends Entities>(
       // The middleware already responded so there's nothing for us to do
       if (res.headersSent) return;
 
-      if (options.validateSchema) {
-        // Lets validate that schema
-        const schemaErrors = options.validateSchema(val);
+      if (options.validateSchemaFn) {
+        const schemaErrors = options.validateSchemaFn(val);
 
         if (schemaErrors.length) {
-          const response = {
-            error: 'INVALID_SCHEMA_RESPONSE',
-            path: schemaErrors[0].key,
-            source: 'response',
-          };
+          if (options.logResponseSchemaErrorsFn) {
+            const path = options.routePath != null
+            ? `${req.baseUrl || ''}${options.routePath}`
+            : `${req.baseUrl}${req.path}`;
 
-          res.status(400).send(response);
-          return;
+            options.logResponseSchemaErrorsFn(
+              req.method,
+              path,
+              schemaErrors,
+              val,
+            );
+          }
+          if (options.validateResponseSchema) {
+            const response = {
+              error: 'INVALID_SCHEMA_RESPONSE',
+              path: schemaErrors[0].key,
+              source: 'response',
+            };
+
+            res.status(400).send(response);
+            return;
+          }
         }
       }
 
@@ -151,6 +171,8 @@ export default <TEntities extends Entities, TSchema>({
     errorHandler,
     compileSchema,
     mapAsyncResultFn,
+    logResponseSchemaErrorsFn,
+    validateResponseSchema,
   }: AsyncOptions<TEntities, TSchema> = {}): Converter<TEntities, TSchema> =>
   (args, context) => {
     const statusCode = args.find(isNumber) || DEFAULT_STATUS_CODE;
@@ -163,8 +185,12 @@ export default <TEntities extends Entities, TSchema>({
         ? schema.$schema
         : schema
       : undefined;
-    const validateSchema =
-      compileSchema && rawSchema && compileSchema(rawSchema, context);
+    const willUseResponseSchema =
+      validateResponseSchema || logResponseSchemaErrorsFn;
+    const validateSchemaFn =
+      willUseResponseSchema && compileSchema && rawSchema
+        ? compileSchema(rawSchema, context)
+        : undefined;
 
     const middlewares = args.filter(isMiddleware);
     const lastMiddleware = middlewares[middlewares.length - 1];
@@ -177,9 +203,12 @@ export default <TEntities extends Entities, TSchema>({
           // Check if this is the last valid middleware (not the statusCode arg)
           {
             isLastMiddleware: m === lastMiddleware,
+            logResponseSchemaErrorsFn,
             mapAsyncResultFn,
+            routePath: context.path,
             statusCode,
-            validateSchema,
+            validateResponseSchema,
+            validateSchemaFn,
           },
           // Passes a custom error handler
           errorHandler,

@@ -88,12 +88,11 @@ const asyncAppProvider: AppProvider = <
   }
 
   const async = asyncConverter<TEntities, TSchema>({
-    compileSchema:
-      opts && opts.compileSchemaFn && opts.validateResponseSchema
-        ? opts.compileSchemaFn
-        : undefined,
+    compileSchema: opts && opts.compileSchemaFn,
     errorHandler: opts && opts.errorHandlerFn ? opts.errorHandlerFn : undefined,
+    logResponseSchemaErrorsFn: opts && opts.logResponseSchemaErrorsFn,
     mapAsyncResultFn: opts && opts.mapAsyncResultFn,
+    validateResponseSchema: opts && opts.validateResponseSchema,
   });
 
   METHODS.forEach(m =>

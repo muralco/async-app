@@ -134,6 +134,21 @@ app.get(
     computePermissions(entities, 'todo', { todo: req.todo, user: req.user }),
 );
 
+// Route for testing logResponseSchemaErrorsFn, returns data that fails
+// response schema validation
+app.get(
+  '/log-response-schema-test/:id',
+  {
+    $scope: 'response',
+    id: 'number',
+    name: 'string',
+  },
+  (req: Req) => ({
+    id: req.params.id,
+    name: 123,
+  }),
+);
+
 app.get('/echo1', () => 'echo');
 
 app.get(

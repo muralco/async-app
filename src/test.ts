@@ -3,6 +3,8 @@ import pickledCucumber, { SetupFn } from 'pickled-cucumber';
 import httpSupertest from 'pickled-cucumber/http/supertest';
 import supertest from 'supertest';
 import advancedApp from './examples/advanced/app';
+import { lastLogResponseSchemaErrorsCalls } from
+  './examples/advanced/async-app';
 import { DB } from './examples/advanced/db';
 import { entities } from './examples/advanced/test';
 import orderMiddlewares from './order';
@@ -89,6 +91,27 @@ const setup: SetupFn = ({ compare, getCtx, Given, setCtx, Then, When }) => {
     { inline: true },
   );
   // === Advanced example =================================================== //
+  Given('clear logResponseSchemaErrorsFn calls', () => {
+    lastLogResponseSchemaErrorsCalls.length = 0;
+  });
+  Then(
+    'logResponseSchemaErrorsFn was called once with path containing "(.*)"',
+    (pathSubstring: string) => {
+      const calls = lastLogResponseSchemaErrorsCalls;
+      if (calls.length !== 1) {
+        throw new Error(
+          `Expected logResponseSchemaErrorsFn to be called once, ` +
+          `got ${calls.length}`,
+        );
+      }
+      const path = calls[0].path;
+      if (!path.includes(pathSubstring)) {
+        throw new Error(
+          `Expected path to contain "${pathSubstring}", got "${path}"`,
+        );
+      }
+    },
+  );
   Then(
     'the DB {op}',
     (op, expected) => compare(op, DB, expected),

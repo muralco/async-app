@@ -105,6 +105,13 @@ export type ErrorHandlerFn<TEntities extends Entities> = (
   next: NextFunction,
 ) => any;
 
+export type LogResponseSchemaErrorsFn = (
+  method: string,
+  path: string,
+  errors: ValidationError[],
+  value: unknown,
+) => void;
+
 // === Arguments ============================================================ //
 export type MiddlewareArg<TEntities extends Entities> =
   | CommonMiddleware<TEntities>
@@ -167,6 +174,7 @@ export interface Opts<
   compileSchemaFn?: CompileSchema<TSchema>;
   generateSchemaErrorFn?: GenerateSchemaErrorFn;
   errorHandlerFn?: ErrorHandlerFn<TEntities>;
+  logResponseSchemaErrorsFn?: LogResponseSchemaErrorsFn;
   validateResponseSchema?: boolean;
   mapAsyncResultFn?: MapAsyncResultFn<TEntities>;
 }

@@ -17,8 +17,13 @@ import { ToDo, User } from './db';
 import createApp, {
   Entities,
   internalServerError,
-  Req as Request } from '../..';
-import { ErrorHandlerFn, GenerateSchemaErrorFn } from '../../types';
+  Req as Request,
+} from '../..';
+import {
+  ErrorHandlerFn,
+  GenerateSchemaErrorFn,
+  LogResponseSchemaErrorsFn,
+} from '../../types';
 
 // This type represents all the custom `req` keys that we could have, in this
 // example those are `res.user` and `req.todo`.
@@ -56,6 +61,24 @@ const generateSchemaErrorFn: GenerateSchemaErrorFn = (
   };
 };
 
+export const lastLogResponseSchemaErrorsCalls: {
+  method: string;
+  path: string;
+  errors: { expected?: string; key: (string | number)[] }[];
+  value: unknown;
+}[] = [];
+
+const logResponseSchemaErrorsFn: LogResponseSchemaErrorsFn = (
+  method,
+  path,
+  errors,
+  value,
+) => {
+  // Capture logResponseSchemaErrorsFn calls for tests,
+  // reset between scenarios
+  lastLogResponseSchemaErrorsCalls.push({ method, path, errors, value });
+};
+
 // This function replaces `express()` as in `const app = express()`;
 export default (errorHandlerFn?: ErrorHandlerFn<ExampleEntities>) =>
   createApp<ExampleEntities, Type>({
@@ -73,6 +96,7 @@ export default (errorHandlerFn?: ErrorHandlerFn<ExampleEntities>) =>
     // errors to an error response payload. When not specified, async-app uses a
     // built-in schema validation error function.
     generateSchemaErrorFn,
+    logResponseSchemaErrorsFn,
     mapAsyncResultFn: async (value, { req, ...opts }) => {
       if (value !== 'echo') return value;
 

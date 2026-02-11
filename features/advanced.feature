@@ -207,6 +207,18 @@ Scenario: deprecate.rewrite get todos
   And the response headers at deprecated-for is "GET /todos/${U.username}"
   And the response headers at location contains "/todos/${U.username}"
 
+Scenario: logResponseSchemaErrorsFn is called with route pattern path on invalid response schema
+  Given clear logResponseSchemaErrorsFn calls
+  When GET /log-response-schema-test/abc123
+  Then the response is 400 and the payload includes
+    """
+    {
+      "error": "INVALID_SCHEMA_RESPONSE",
+      "source": "response"
+    }
+    """
+  And logResponseSchemaErrorsFn was called once with path containing "/log-response-schema-test/:id"
+
 # Compute permissions
 
 Scenario: get positive TODO permissions

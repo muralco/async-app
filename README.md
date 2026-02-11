@@ -258,6 +258,36 @@ const { parseSchema } = require('mural-schema');
 const app = createApp({ compileSchemaFn: parseSchema });
 ```
 
+### Response validation
+
+You can validate response bodies by adding a schema with `$scope: 'response'` to the
+endpoint and enabling response validation in `createApp`:
+
+```js
+app.get(
+  '/users/:id',
+  {
+    $scope: 'response',
+    id: 'string',
+    name: 'string',
+  },
+  req => getUserById(req.params.id),
+);
+```
+
+Options in `createApp`:
+
+- **`validateResponseSchema`** (boolean) – When `true`, responses that fail the
+  response schema are rejected with HTTP 400 and a payload
+  `{ error: 'INVALID_SCHEMA_RESPONSE', path, source: 'response' }`. When `false`
+  or omitted (e.g. in production), response schema validation is skipped.
+- **`logResponseSchemaErrorsFn`** (optional) – Callback invoked when a response
+  fails schema validation: `(method, path, errors, value) => void`. Useful for
+  logging or metrics. The `path` argument is the **route pattern** (e.g.
+  `/users/:id`), not the actual request path, so you can aggregate by route.
+  This callback can be used with or without `validateResponseSchema` (e.g. log
+  in production without returning 400).
+
 ## Error handling
 
 `async-app` provides a set of error functions you can throw from your
